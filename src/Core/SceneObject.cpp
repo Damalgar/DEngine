@@ -5,7 +5,7 @@
 SceneObject::SceneObject() : SceneObject("SceneObject") {}
 
 SceneObject::SceneObject(const std::string& name)
-    : name(name), m_parentID(0), transform(this)
+    : name(name), m_parentID(0), transform(this), m_tag("Default")
 {
     std::random_device rd;
     std::mt19937_64 eng(rd());

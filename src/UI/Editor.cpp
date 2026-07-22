@@ -1,6 +1,7 @@
 #include "UI/Editor.h"
 #include <Core/Application.h>
 #include "UI/EditorCustomizations.h"
+#include "Core/TagManager.h"
 
 Editor::Editor(GLuint sceneTextureID)
 {
@@ -194,6 +195,51 @@ void Editor::DrawTagsPanel()
     const std::vector<SceneObject*> sceneObjects = Application::Instance->GetSceneObjects();
 
     //TODO: tags
+    static char newTagBuf[64] = "";
+    ImGui::InputText("##NewTag", newTagBuf, sizeof(newTagBuf));
+    ImGui::SameLine();
+    if (DrawButtonColored("+", BUTTON_COLORS::GREY))
+    {
+        if (strlen(newTagBuf) > 0)
+        {
+            bool added = TagManager::AddTag(newTagBuf);
+            if (added)
+            {
+                std::string notify = "Tag " + std::string(newTagBuf) + " added"; 
+                NotificationSystem::Show(notify.c_str(), TOAST_INFO);
+                newTagBuf[0] = '\0';
+            } else
+            {
+                std::string notify = "Tag " + std::string(newTagBuf) + " already exists"; 
+                NotificationSystem::Show(notify.c_str(), TOAST_WARNING);
+            }
+        }
+    }
+
+    const std::vector<std::string>& tags = TagManager::GetTags();
+    for (const std::string& tag : tags)
+    {
+        if (tag.empty() || tag == "")
+        {
+            TagManager::RemoveTag("");
+            continue;
+        }
+
+        ImGui::PushID(tag.c_str());
+        bool isVisible = TagManager::IsTagVisible(tag);
+        if (ImGui::Checkbox(tag.c_str(), &isVisible))
+            TagManager::SetTagVisibility(tag, isVisible);
+
+        if (tag != "Default")
+        {
+            ImGui::SameLine(ImGui::GetWindowWidth() - 50);
+            if (DrawButtonColored("X", BUTTON_COLORS::NEGATIVE))
+                TagManager::RemoveTag(tag);
+        }
+        ImGui::PopID();
+    }
+
+    Spacing(3);
 
     ImGui::PopStyleVar();
     ImGui::End();
@@ -217,13 +263,28 @@ void Editor::DrawInspectorPanel()
         return;
     }
 
+    char nameBuf[256];
+    strcpy(nameBuf, m_selectedSceneObj->name.c_str());
+    if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf)))
+        m_selectedSceneObj->name = nameBuf;
+
     bool active = m_selectedSceneObj->IsActive();
     ImGui::Checkbox("##ActiveObjectCheckbox", &active);
 
     if (active != m_selectedSceneObj->IsActive())
         m_selectedSceneObj->SetIsActive(active);
 
-    ImGui::Text("pos: ");
+    SpacingH(10);
+
+    const auto& allTags = TagManager::GetTags();
+    std::string tag = m_selectedSceneObj->GetTag();
+    if (DrawStringCombo("Tag", &tag, allTags))
+    {
+        m_selectedSceneObj->SetTag(tag);
+    }
+
+    Spacing(2);
+    TextUnformatted("Transform");
     Indent();
 
     Transform* tr = &m_selectedSceneObj->transform;

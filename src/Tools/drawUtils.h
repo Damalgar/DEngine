@@ -750,6 +750,34 @@ inline bool DrawEnumCombo(const char* label, T* currentVar, const std::vector<Co
     return valueChanged;
 }
 
+inline bool DrawStringCombo(const char* label, std::string* currentVar, const std::vector<std::string>& options, float invSize = 1)
+{
+    bool valueChanged = false;
+
+    float totalWidth = ImGui::GetContentRegionAvail().x / invSize;
+    ImGui::SetNextItemWidth(totalWidth);
+
+    if (ImGui::BeginCombo(label, currentVar->c_str()))
+    {
+        for (const std::string& option : options)
+        {
+            bool isSelected = (*currentVar == option);
+
+            if (ImGui::Selectable(option.c_str(), isSelected))
+            {
+                *currentVar = option;
+                valueChanged = true;
+            }
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    
+    return valueChanged;
+}
+
 inline void TextUnformatted(const char* text, float size = 1)
 {
     ImGui::SetWindowFontScale(size);

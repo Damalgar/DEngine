@@ -1,5 +1,6 @@
 #include "Core/Scene.h"
 #include "Components/MeshRenderer.h"
+#include "Core/TagManager.h"
 
 Scene::Scene(std::string name)
 {
@@ -27,7 +28,7 @@ void Scene::Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatri
 {
     for (SceneObject* obj : m_sceneObjects)
     {
-        if (!obj->IsActiveInHierarchy())
+        if (!obj->IsActiveInHierarchy() || !TagManager::IsTagVisible(obj->GetTag()))
             continue;
 
         MeshRenderer* renderer = obj->GetComponent<MeshRenderer>();
@@ -150,4 +151,15 @@ SceneObject* Scene::InstantiateModelNode(Model* model, const ModelNode& node, Sc
         InstantiateModelNode(model, childNode, obj);
 
     return obj;
+}
+
+void Scene::OnTagDeleted(const std::string& tag)
+{
+    for (SceneObject* obj : m_sceneObjects)
+    {
+        if (obj->GetTag() != tag)
+            continue;
+
+        obj->SetTag("Default");
+    }
 }

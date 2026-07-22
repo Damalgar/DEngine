@@ -26,6 +26,8 @@ class Scene : public ISerializable {
     json ToJson() const override;
     void FromJson(const json& j) override;
 
+    void OnTagDeleted(const std::string& tag);
+
     SceneObject* InstantiateModelNode(Model* model, const ModelNode& node, SceneObject* parentObject);
 
     private:

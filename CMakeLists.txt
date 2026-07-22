@@ -73,6 +73,7 @@ set(SOURCES
     src/Core/AssetManager.cpp
     src/Core/AssimpImportManager.cpp
     src/Core/Transform.cpp
+    src/Core/TagManager.cpp
 
     #===IO===
     src/IO/InputsManager.cpp

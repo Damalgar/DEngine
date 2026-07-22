@@ -2,6 +2,7 @@
 #include "UI/Editor.h"
 #include "Core/SceneObject.h"
 #include "Core/SceneManager.h"
+#include "Core/TagManager.h"
 
 
 Application::Application()
@@ -50,6 +51,7 @@ int Application::Init(int argc, char* argv0)
 
     InputsManager::Init(m_window);
     AssetManager::Init();
+    TagManager::Init();
     SceneManager::Init();
     IconsLoader::LoadIcons(m_window);
 

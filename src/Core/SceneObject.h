@@ -29,6 +29,9 @@ class SceneObject : public ISerializable {
     void SetIsActive(const bool value) { m_isActive = value; }
     bool IsActive() const { return m_isActive; }
     bool IsActiveInHierarchy() const;
+
+    void SetTag(const std::string& tag) { m_tag = tag; }
+    std::string GetTag() const { return m_tag; }
     
     template<typename T>
     T* GetComponent()
@@ -46,4 +49,5 @@ class SceneObject : public ISerializable {
     uint64_t m_parentID;
     std::vector<std::unique_ptr<Component>> m_components;
     bool m_isActive = true;
+    std::string m_tag;
 };
