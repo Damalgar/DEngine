@@ -16,7 +16,9 @@ class Scene : public ISerializable {
     void SetName(const std::string& name) { m_name = name; }
     std::string GetName() const { return m_name; }
     
+    void Update();
     void Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos);
+
     void AddObject(SceneObject* object);
     void RemoveObject(SceneObject* object);
     void RemoveObject(int index);

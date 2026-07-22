@@ -2,10 +2,8 @@
     "name": "Autosave",
     "sceneObjects": [
         {
-            "id": 15030463511020578552,
-            "material": "DefaultMaterial",
-            "model": "Suzanne",
-            "name": "Suzanne",
+            "id": 16532111728632880592,
+            "name": "Esempio",
             "parent_id": 0,
             "transform": {
                 "position": [
@@ -14,9 +12,9 @@
                     0.0
                 ],
                 "rotation": [
-                    -0.0,
+                    -90.0,
                     0.0,
-                    0.0
+                    90.0
                 ],
                 "scale": [
                     1.0,
@@ -26,11 +24,9 @@
             }
         },
         {
-            "id": 17223573721878985617,
-            "material": "DefaultMaterial",
-            "model": "Hierarchy",
-            "name": "Cube",
-            "parent_id": 0,
+            "id": 835901574893929355,
+            "name": "Mixer",
+            "parent_id": 16532111728632880592,
             "transform": {
                 "position": [
                     0.0,
@@ -50,35 +46,9 @@
             }
         },
         {
-            "id": 15377757436271510523,
-            "material": "DefaultMaterial",
-            "model": "Hierarchy",
-            "name": "Cube.001",
-            "parent_id": 17223573721878985617,
-            "transform": {
-                "position": [
-                    2.385424852371216,
-                    2.5417773723602295,
-                    3.0242817401885986
-                ],
-                "rotation": [
-                    -36.91952133178711,
-                    7.959897518157959,
-                    -11.88587760925293
-                ],
-                "scale": [
-                    0.7189133167266846,
-                    0.7189133763313293,
-                    0.7189133763313293
-                ]
-            }
-        },
-        {
-            "id": 14186347662817569574,
-            "material": "DefaultMaterial",
-            "model": "Case",
-            "name": "Case",
-            "parent_id": 0,
+            "id": 9187129950938493398,
+            "name": "Instant",
+            "parent_id": 835901574893929355,
             "transform": {
                 "position": [
                     0.0,
@@ -98,35 +68,9 @@
             }
         },
         {
-            "id": 6543362382726939306,
-            "material": "DefaultMaterial",
-            "model": "Translated",
-            "name": "Cube",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    -772.2685546875,
-                    573.1762084960938,
-                    -733.4070434570313
-                ],
-                "rotation": [
-                    -90.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    100.0,
-                    100.0,
-                    100.0
-                ]
-            }
-        },
-        {
-            "id": 16881112419588590954,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
+            "id": 15270586234249886751,
+            "name": "MixerTube",
+            "parent_id": 835901574893929355,
             "transform": {
                 "position": [
                     0.0,
@@ -146,563 +90,9 @@
             }
         },
         {
-            "id": 336207398492245333,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 5545459014537181219,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 15336381719187090308,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 14959466471319694940,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 1831664942508728186,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 7097385936463520151,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 15912656302103189186,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 2861883703300810730,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 11673679636237225117,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 18209585670638001574,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 15567736967389207448,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 1273399625914121687,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 9823302712020563154,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 12915064510958918983,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 2376393055691656425,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 7565821117433781891,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 5985538312246302090,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 14322289151984732823,
-            "material": "DefaultMaterial",
-            "model": "Grinder",
-            "name": "Grinder",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 3869453202023482664,
-            "material": "DefaultMaterial",
-            "model": "Translated",
-            "name": "Cube",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    -772.2685546875,
-                    573.1762084960938,
-                    -733.4070434570313
-                ],
-                "rotation": [
-                    -90.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    100.0,
-                    100.0,
-                    100.0
-                ]
-            }
-        },
-        {
-            "id": 13990029903947851908,
-            "material": "DefaultMaterial",
-            "model": "Case",
-            "name": "Case",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 10448625525606004076,
-            "material": "DefaultMaterial",
-            "model": "Case",
-            "name": "Case",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 2564278607547098042,
-            "material": "DefaultMaterial",
-            "model": "Case",
-            "name": "Case",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 15210999927343855206,
-            "material": "DefaultMaterial",
-            "model": "Case",
-            "name": "Case",
-            "parent_id": 0,
-            "transform": {
-                "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    -0.0,
-                    0.0,
-                    0.0
-                ],
-                "scale": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
-            "id": 3636349454237587425,
-            "material": "DefaultMaterial",
-            "model": "Hierarchy",
-            "name": "Cube",
-            "parent_id": 0,
+            "id": 13504250167391894107,
+            "name": "Z4000",
+            "parent_id": 16532111728632880592,
             "transform": {
                 "position": [
                     0.0,
@@ -722,26 +112,46 @@
             }
         },
         {
-            "id": 8864629259131091985,
-            "material": "DefaultMaterial",
-            "model": "Hierarchy",
-            "name": "Cube.001",
-            "parent_id": 3636349454237587425,
+            "id": 15263179796426011474,
+            "name": "Grinder",
+            "parent_id": 13504250167391894107,
             "transform": {
                 "position": [
-                    2.385424852371216,
-                    2.5417773723602295,
-                    3.0242817401885986
+                    0.0,
+                    0.0,
+                    0.0
                 ],
                 "rotation": [
-                    -36.91952133178711,
-                    7.959897518157959,
-                    -11.88587760925293
+                    -0.0,
+                    0.0,
+                    0.0
                 ],
                 "scale": [
-                    0.7189133167266846,
-                    0.7189133763313293,
-                    0.7189133763313293
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "id": 9286561343853206978,
+            "name": "z4000Tube",
+            "parent_id": 13504250167391894107,
+            "transform": {
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotation": [
+                    -0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
                 ]
             }
         }

@@ -26,9 +26,13 @@ void InputsManager::SetCursorLocked(bool locked)
     if (!s_window) return;
 
     if (locked)
+    {
         glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    else
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+    } else {
         glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+    }
 }
 
 bool InputsManager::IsMouseButtonDown(ImGuiMouseButton button)

@@ -1,4 +1,5 @@
 #include "Core/Scene.h"
+#include "Components/MeshRenderer.h"
 
 Scene::Scene(std::string name)
 {
@@ -13,10 +14,26 @@ Scene::~Scene()
     m_sceneObjects.clear();
 }
 
+void Scene::Update()
+{
+    for (SceneObject* obj : m_sceneObjects)
+    {
+        if (obj->IsActiveInHierarchy())
+            obj->Update();
+    }
+}
+
 void Scene::Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos)
 {
     for (SceneObject* obj : m_sceneObjects)
-        obj->Draw(viewMatrix, projectionMatrix, viewPos);
+    {
+        if (!obj->IsActiveInHierarchy())
+            continue;
+
+        MeshRenderer* renderer = obj->GetComponent<MeshRenderer>();
+        if (renderer)
+            renderer->Draw(viewMatrix, projectionMatrix, viewPos);
+    }
 }
 
 void Scene::AddObject(SceneObject* object)
@@ -84,7 +101,7 @@ void Scene::FromJson(const json& j)
                 if (it != objectMap.end())
                 {
                     SceneObject* parentObj = it->second;
-                    obj->transform.SetParent(&parentObj->transform);
+                    obj->transform.SetParent(&parentObj->transform, false);
                 }
                 else
                     std::cerr << "[SCENE] Error: Parent with id " << obj->GetParentID() << "not found for" << obj->name << std::endl;
@@ -95,9 +112,22 @@ void Scene::FromJson(const json& j)
 
 SceneObject* Scene::InstantiateModelNode(Model* model, const ModelNode& node, SceneObject* parentObject)
 {
-    SceneObject* obj = new SceneObject(node.name, model, AssetManager::GetMaterial("DefaultMaterial"));
+    SceneObject* obj = new SceneObject(node.name);
     
-    obj->SetMeshIndices(node.meshIndices);
+    if (!node.meshIndices.empty())
+    {
+        obj->AddComponent(COMPONENT_TYPE::MESH_RENDERER);
+        MeshRenderer* renderer = obj->GetComponent<MeshRenderer>();
+        if (!renderer)
+            return nullptr;
+
+        renderer->SetMeshIndices(node.meshIndices);
+        renderer->SetModel(model);
+        renderer->SetSharedMaterial(AssetManager::GetMaterial("DefaultMaterial"));
+
+        obj->AddComponent(COMPONENT_TYPE::TELEMETRY_VIEWER);
+    }
+    
     glm::vec3 scale, pos, skew;
     glm::quat rotQuat;
     glm::vec4 persp;

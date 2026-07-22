@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <string>
 #include <filesystem>
-#include "Components/Model.h"
+#include "Render/Model.h"
 #include "Render/Texture.h"
 #include "Render/Material.h"
 #include "IO/FileSystem.h"

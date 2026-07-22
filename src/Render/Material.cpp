@@ -11,6 +11,16 @@ Material::Material(Shader* shader, Texture* colorMap, Texture* specularMap, floa
     m_name = name;
 }
 
+Material::Material(Material* other)
+{
+    m_shader = other->GetShader();
+    m_colorMap = other->GetColorMap();
+    m_specularMap = other->GetSpecularMap();
+    m_shininess = other->GetShininess();
+    m_tintColor = other->GetTintColor();
+    m_name = other->GetName();
+}
+
 void Material::Apply()
 {
     if (!m_shader) return;

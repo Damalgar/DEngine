@@ -35,8 +35,9 @@ class Application {
     void MainLoop();
 
     const std::vector<SceneObject*>& GetSceneObjects() const;
+    Camera* GetCamera() { return m_camera; }
 
-    void AddObjectToScene(const std::string &filename);
+    void AddModelToScene(const std::string &filename);
 
     private:
     GLFWwindow* m_window = nullptr;

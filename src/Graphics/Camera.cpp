@@ -3,16 +3,27 @@
 #include <iostream>
 void Camera::Update()
 {
-    if (InputsManager::IsMouseButtonPressed(ImGuiMouseButton_Right))
+    if (InputsManager::IsMouseButtonPressed(ImGuiMouseButton_Right) && m_canInteract)
+    {
+        m_isDragging = true;
         InputsManager::SetCursorLocked(true);
+        m_lockedMousePos = ImGui::GetMousePos();
+    }
 
-    if (InputsManager::IsMouseButtonReleased(ImGuiMouseButton_Right))
+    if (InputsManager::IsMouseButtonReleased(ImGuiMouseButton_Right) && m_isDragging)
+    {
         InputsManager::SetCursorLocked(false);
+        m_isDragging = false;
 
-    if (!InputsManager::IsMouseButtonDown(ImGuiMouseButton_Right))
+        ImGui::GetIO().WantSetMousePos = true;
+        ImGui::GetIO().MousePos = m_lockedMousePos;
+    }
+
+    if (!m_isDragging)
         return;
 
     vec2 mouseDelta = InputsManager::GetMouseDelta();
+    
     m_yaw   += mouseDelta.x * m_sensitivity;
     m_pitch -= mouseDelta.y * m_sensitivity;
 

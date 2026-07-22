@@ -1,4 +1,4 @@
-#include "Components/Mesh.h"
+#include "Render/Mesh.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> inidices)
 {

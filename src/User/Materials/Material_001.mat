@@ -1,0 +1,13 @@
+{
+    "colorMap": "",
+    "name": "Material_001",
+    "shader": "DefaultShader",
+    "shininess": 128,
+    "specularMap": "",
+    "tintColor": [
+        0.6,
+        0.0,
+        0.3,
+        1.0
+    ]
+}

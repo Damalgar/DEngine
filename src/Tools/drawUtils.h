@@ -404,8 +404,8 @@ inline bool DrawFieldInt(const char* label, int* variable, int v_min, int v_max,
     return returnEdit ? edited : valueChanged;
 }
 
-inline bool DrawFieldFloat(const char* label, float* variable, float v_min = std::numeric_limits<float>::lowest(), float v_max = std::numeric_limits<float>::max(), const char* format = "%.1f", bool returnEdit = false, 
-    float invSize = 1, bool* outActivated = nullptr, bool* outDeactivated = nullptr) 
+inline bool DrawFieldFloat(const char* label, float* variable, float invSize = 1, float v_min = std::numeric_limits<float>::lowest(), float v_max = std::numeric_limits<float>::max(), const char* format = "%.1f", bool returnEdit = false, 
+    bool* outActivated = nullptr, bool* outDeactivated = nullptr) 
 {
     bool edited = false;
     bool valueChanged = false;

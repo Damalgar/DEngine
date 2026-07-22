@@ -72,6 +72,7 @@ set(SOURCES
     src/Core/SceneManager.cpp
     src/Core/AssetManager.cpp
     src/Core/AssimpImportManager.cpp
+    src/Core/Transform.cpp
 
     #===IO===
     src/IO/InputsManager.cpp
@@ -83,11 +84,12 @@ set(SOURCES
     src/Render/Texture.cpp
     src/Render/Material.cpp
     src/Render/Framebuffer.cpp
+    src/Render/Mesh.cpp
 
     #===COMPONENTS===
-    src/Components/Transform.cpp
-    src/Components/Mesh.cpp
-
+    src/Components/TelemetryViewer.cpp
+    src/Components/MeshRenderer.cpp
+    
     #===TOOLS===
     src/Tools/FsDialog.cpp
 

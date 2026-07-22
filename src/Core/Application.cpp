@@ -72,6 +72,7 @@ void Application::MainLoop()
     while (!glfwWindowShouldClose(m_window))
     {
         StartRenderCycle();
+        SceneManager::GetActiveScene()->Update();
         SceneManager::GetActiveScene()->Render(m_viewMatrix, m_projectionMatrix, m_camera->GetPos());
         EndRenderCycle();
     }
@@ -128,7 +129,7 @@ void Application::EndRenderCycle()
     glfwSwapBuffers(m_window);
 }
 
-void Application::AddObjectToScene(const std::string &filename)
+void Application::AddModelToScene(const std::string &filename)
 {
     Model* model = AssetManager::GetModel(filename);
     if (!model)
@@ -140,9 +141,16 @@ void Application::AddObjectToScene(const std::string &filename)
     if (model)
     {
         const ModelNode* startNode = &model->GetRootNode();
-        while (startNode->meshIndices.empty() && startNode->children.size() == 1)
-            startNode = &startNode->children[0];
-        SceneManager::GetActiveScene()->InstantiateModelNode(model, *startNode, nullptr);
+        if (startNode->meshIndices.empty() && startNode->children.size() == 1)
+        {
+            while (startNode->meshIndices.empty() && startNode->children.size() == 1)
+                startNode = &startNode->children[0];
+            SceneManager::GetActiveScene()->InstantiateModelNode(model, *startNode, nullptr);
+        } else {
+            SceneObject* rootObj = SceneManager::GetActiveScene()->InstantiateModelNode(model, model->GetRootNode(), nullptr);
+            if (rootObj)
+                rootObj->name = model->GetName();
+        }
     }
 }
 

@@ -4,7 +4,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include "Components/Transform.h"
+#include "Core/Transform.h"
 #include "Vendor/json.hpp"
 
 using namespace glm;

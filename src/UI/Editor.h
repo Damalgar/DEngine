@@ -6,6 +6,7 @@
 #include "Fonts/FontsLoader.h"
 #include "Core/Scene.h"
 #include "Tools/FsDialog.h"
+#include "Components/include_components.h"
 
 class Editor
 {
@@ -28,4 +29,5 @@ class Editor
     void DrawFileSystemPanel();
     void DrawInspectorPanel();
     void DrawHierarchyNode(SceneObject* obj);
+    void DrawTagsPanel();
 };

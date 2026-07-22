@@ -40,8 +40,10 @@ void Editor::DrawPanels()
         ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.25f, NULL, &dock_main_id);
         ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.33f, NULL, &dock_main_id);
         ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.33f, NULL, &dock_main_id);
+        ImGuiID dock_id_left_bottom = ImGui::DockBuilderSplitNode(dock_id_left, ImGuiDir_Down, 0.25f, NULL, &dock_id_left);
 
         ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
+        ImGui::DockBuilderDockWindow("Tags", dock_id_left_bottom);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
         ImGui::DockBuilderDockWindow("Asset Browser", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Scene", dock_main_id);
@@ -55,6 +57,9 @@ void Editor::DrawPanels()
     window_class.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
     ImGui::SetNextWindowClass(&window_class);
     DrawHierarchyPanel();
+
+    ImGui::SetNextWindowClass(&window_class);
+    DrawTagsPanel();
 
     ImGui::SetNextWindowClass(&window_class);
     DrawInspectorPanel();
@@ -171,6 +176,29 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
     }
 }
 
+void Editor::DrawTagsPanel()
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Tags", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar);
+    ImGui::PopStyleVar();
+
+    ImGui::Dummy(ImVec2(0.0f, 4.0f));
+    ImGui::Indent(10.0f);
+    ImGui::TextDisabled("Tags");
+    ImGui::Unindent(10.0f);
+    ImGui::Separator();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+    std::vector<std::string> uniqueTags;
+    const std::vector<SceneObject*> sceneObjects = Application::Instance->GetSceneObjects();
+
+    //TODO: tags
+
+    ImGui::PopStyleVar();
+    ImGui::End();
+}
+
 void Editor::DrawInspectorPanel()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -188,6 +216,12 @@ void Editor::DrawInspectorPanel()
         ImGui::End();
         return;
     }
+
+    bool active = m_selectedSceneObj->IsActive();
+    ImGui::Checkbox("##ActiveObjectCheckbox", &active);
+
+    if (active != m_selectedSceneObj->IsActive())
+        m_selectedSceneObj->SetIsActive(active);
 
     ImGui::Text("pos: ");
     Indent();
@@ -210,7 +244,17 @@ void Editor::DrawInspectorPanel()
 
     Spacing(2);
 
-    TextUnformatted(m_selectedSceneObj->GetMaterial()->GetName().c_str());
+    const auto& components = m_selectedSceneObj->GetComponents();
+
+    for (const auto& comp : components)
+    {
+        if (ImGui::CollapsingHeader(comp->GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::PushID(comp.get());
+            comp->OnGuiDraw();
+            ImGui::PopID();
+        }
+    }
 
 
     ImGui::End();
@@ -221,6 +265,11 @@ void Editor::DrawScenePanel()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::Begin("Scene");
     ImGui::PopStyleVar();
+
+    bool isSceneHovered = ImGui::IsWindowHovered();
+    Camera* mainCamera = Application::Instance->GetCamera();
+    if (mainCamera)
+        mainCamera->SetCanInteract(isSceneHovered);
 
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
     m_viewportSize = viewportPanelSize;
@@ -297,7 +346,7 @@ void Editor::DrawFileSystemPanel()
                             if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
                                     BUTTON_COLORS::NONE, "Model"))
                             {
-                                Application::Instance->AddObjectToScene(filename);
+                                Application::Instance->AddModelToScene(filename);
                             }
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
@@ -371,7 +420,8 @@ void Editor::DrawFileSystemPanel()
                             {
                                 if (m_selectedSceneObj)
                                 {
-                                    m_selectedSceneObj->GetMaterial()->SetColorMap(AssetManager::GetTexture(entry.path().filename().stem().string()));
+                                    MeshRenderer* renderer = m_selectedSceneObj->GetComponent<MeshRenderer>();
+                                    renderer->GetMaterial()->SetColorMap(AssetManager::GetTexture(entry.path().filename().stem().string()));
                                 }
                             }
                             TextElided(filename, fileSystemPref.cellSize);
@@ -531,7 +581,10 @@ void Editor::DrawFileSystemPanel()
                                     BUTTON_COLORS::NONE, "Material"))
                             {
                                 if (m_selectedSceneObj)
-                                    m_selectedSceneObj->SetMaterial(AssetManager::GetMaterial(filename));
+                                {
+                                    MeshRenderer* renderer = m_selectedSceneObj->GetComponent<MeshRenderer>();
+                                    renderer->SetSharedMaterial(AssetManager::GetMaterial(filename));
+                                }
                             }
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();

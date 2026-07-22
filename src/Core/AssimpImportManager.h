@@ -5,7 +5,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "Components/Model.h"
+#include "Render/Model.h"
 
 class AssimpImportManager {
     public:

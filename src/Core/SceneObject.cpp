@@ -2,10 +2,10 @@
 #include "Core/AssetManager.h"
 #include <random>
 
-SceneObject::SceneObject() : SceneObject("SceneObject", nullptr, nullptr) {}
+SceneObject::SceneObject() : SceneObject("SceneObject") {}
 
-SceneObject::SceneObject(const std::string& name, Model* model, Material* material)
-    : name(name), m_model(model), m_material(material), m_parentID(0), transform(this)
+SceneObject::SceneObject(const std::string& name)
+    : name(name), m_parentID(0), transform(this)
 {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -14,38 +14,16 @@ SceneObject::SceneObject(const std::string& name, Model* model, Material* materi
     m_ID = distr(eng);
 }
 
-void SceneObject::Draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos)
+void SceneObject::Update()
 {
-    if (!m_model || !m_material)
-        return;
-
-    m_material->Apply();
-
-    Shader* currentShader = m_material->GetShader();
-
-    if (currentShader)
-    {
-        currentShader->SetMat4("modelMatrix", transform.GetModelMatrix());
-        currentShader->SetMat3("normalMatrix", transform.GetNormalMatrix());
-        currentShader->SetMat4("viewMatrix", viewMatrix);
-        currentShader->SetMat4("projectionMatrix", projectionMatrix);
-        currentShader->SetVec3("viewPos", viewPos);
-    }
-
-    for (unsigned int index : m_meshIndices)
-    {
-        const Mesh* mesh = m_model->GetMesh(index);
-        if (mesh)
-            mesh->Draw();
-    }
+    for (auto& c : m_components)
+        c->Update();
 }
 
 json SceneObject::ToJson() const
 {
     json j;
     j["name"] = name;
-    j["model"] = m_model ? m_model->GetName() : "";
-    j["material"] = m_material ? m_material->GetName() : "";
     j["transform"] = transform.ToJson();
     j["id"] = m_ID;
 
@@ -60,13 +38,13 @@ json SceneObject::ToJson() const
 void SceneObject::FromJson(const json& j)
 {
     name = j.contains("name") ? j["name"].get<std::string>() : "Unknown Object";
-    std::string modelName = j.contains("model") ? j["model"].get<std::string>() : "";
     m_ID = j.value("id", 0);
     m_parentID = j.value("parent_id", 0);
 
     if (j.contains("transform"))
         transform.FromJson(j["transform"]);
 
+    /*std::string modelName = j.contains("model") ? j["model"].get<std::string>() : "";
     if (modelName != "")
     {
         m_model = AssetManager::GetModel(modelName);
@@ -78,7 +56,6 @@ void SceneObject::FromJson(const json& j)
     }
 
     std::string materialName = j.contains("material") ? j["material"].get<std::string>() : "";
-
     if (materialName != "")
     {
         m_material = AssetManager::GetMaterial(materialName);
@@ -87,5 +64,76 @@ void SceneObject::FromJson(const json& j)
             AssetManager::LoadMaterial(materialName);
             m_material = AssetManager::GetMaterial(materialName);
         }
+    }*/
+}
+
+bool SceneObject::AddComponent(std::unique_ptr<Component> component)
+{
+    if (component && !HasComponent(component->GetComponentType()))
+    {
+        m_components.push_back(std::move(component));
+        return true;
     }
+    return false;
+}
+
+Component* SceneObject::AddComponent(COMPONENT_TYPE componentType)
+{
+    if (HasComponent(componentType))
+        return nullptr;
+
+    std::unique_ptr<Component> newComp = nullptr;
+
+    switch (componentType)
+    {
+    case COMPONENT_TYPE::TELEMETRY_VIEWER:
+        newComp = std::make_unique<TelemetryViewer>(this);
+        break;
+    case COMPONENT_TYPE::MESH_RENDERER:
+        newComp = std::make_unique<MeshRenderer>(this);
+        break;
+    default:
+        std::cerr << "[SCENE OBJECT] Unknown component type requested" << std::endl;
+        return nullptr;
+    }
+
+    Component* rawPtr = newComp.get();
+    m_components.push_back(std::move(newComp));
+    return rawPtr;
+}
+
+bool SceneObject::RemoveComponent(COMPONENT_TYPE componentType)
+{
+    for (int i = 0; i < m_components.size(); i++)
+    {
+        if (m_components[i]->GetComponentType() == componentType)
+        {
+            m_components.erase(m_components.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool SceneObject::HasComponent(COMPONENT_TYPE componentType)
+{
+    for (auto& c : m_components)
+    {
+        if (c->GetComponentType() == componentType)
+            return true;
+    }
+
+    return false;
+}
+
+bool SceneObject::IsActiveInHierarchy() const
+{
+    if (!m_isActive)
+        return false;
+
+    Transform* parentTransform = transform.GetParent();
+    if (parentTransform)
+        return parentTransform->GetSceneObject()->IsActiveInHierarchy();
+
+    return true;
 }

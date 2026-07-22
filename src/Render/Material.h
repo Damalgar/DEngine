@@ -8,12 +8,13 @@
 class Material : public ISerializable {
     public:
     Material(Shader* shader, Texture* colorMap, Texture* specularMap, float shininess, vec4 tintColor = vec4(1), std::string name = "New Material");
+    Material(Material* other);
 
     Shader* GetShader() const { return m_shader; }
     Texture* GetColorMap() const { return m_colorMap; }
     Texture* GetSpecularMap() const { return m_specularMap; }
     float GetShininess() const { return m_shininess; }
-    vec3 GetTintColor() const { return m_tintColor; }
+    vec4 GetTintColor() const { return m_tintColor; }
     std::string GetName() const { return m_name; }
 
     void SetColorMap(Texture* texture) { m_colorMap = texture; }
@@ -23,6 +24,8 @@ class Material : public ISerializable {
     void Apply();
     json ToJson() const override;
     void FromJson(const json& j) override;
+
+    Material* Clone() { return new Material(*this); }
 
     private:
     Shader* m_shader;
