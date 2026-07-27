@@ -26,11 +26,17 @@ json SceneObject::ToJson() const
     j["name"] = name;
     j["transform"] = transform.ToJson();
     j["id"] = m_ID;
+    j["tag"] = m_tag;
 
     if (transform.GetParent() != nullptr && transform.GetParent()->GetSceneObject() != nullptr)
         j["parent_id"] = transform.GetParent()->GetSceneObject()->GetID();
     else
         j["parent_id"] = 0;
+
+    json jComponents = json::array();
+    for (const auto& comp : m_components)
+        jComponents.push_back(comp->ToJson());
+    j["components"] = jComponents;
 
     return j;
 }
@@ -40,31 +46,23 @@ void SceneObject::FromJson(const json& j)
     name = j.contains("name") ? j["name"].get<std::string>() : "Unknown Object";
     m_ID = j.value("id", 0);
     m_parentID = j.value("parent_id", 0);
+    m_tag = j.contains("tag") ? j["tag"].get<std::string>() : "Default";
 
     if (j.contains("transform"))
         transform.FromJson(j["transform"]);
 
-    /*std::string modelName = j.contains("model") ? j["model"].get<std::string>() : "";
-    if (modelName != "")
+    m_components.clear();
+
+    if (j.contains("components"))
     {
-        m_model = AssetManager::GetModel(modelName);
-        if (!m_model)
+        for (const json& jComponent : j["components"])
         {
-            AssetManager::LoadModel(modelName);
-            m_model = AssetManager::GetModel(modelName);
+            COMPONENT_TYPE type = jComponent.contains("componentType") ? static_cast<COMPONENT_TYPE>(jComponent["componentType"].get<int>()) : COMPONENT_TYPE::MESH_RENDERER;
+            Component* newComp = AddComponent(type);
+            if (newComp)
+                newComp->FromJson(jComponent);
         }
     }
-
-    std::string materialName = j.contains("material") ? j["material"].get<std::string>() : "";
-    if (materialName != "")
-    {
-        m_material = AssetManager::GetMaterial(materialName);
-        if (!m_material)
-        {
-            AssetManager::LoadMaterial(materialName);
-            m_material = AssetManager::GetMaterial(materialName);
-        }
-    }*/
 }
 
 bool SceneObject::AddComponent(std::unique_ptr<Component> component)

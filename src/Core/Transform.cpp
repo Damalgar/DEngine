@@ -84,9 +84,10 @@ json Transform::ToJson() const
 
 void Transform::FromJson(const json& j)
 {
-    m_position = j.contains("position") ? j["position"].get<vec3>() : vec3(1.0f);
-    m_rotation = j.contains("rotation") ? j["rotation"].get<vec3>() : vec3(1.0f);
+    m_position = j.contains("position") ? j["position"].get<vec3>() : vec3(0.0f);
+    m_rotation = j.contains("rotation") ? j["rotation"].get<vec3>() : vec3(0.0f);
     m_scale = j.contains("scale") ? j["scale"].get<vec3>() : vec3(1.0f);
+    m_isDirty = true;
 }
 
 bool Transform::IsDescendantOf(Transform* potentialAncestor) const

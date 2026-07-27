@@ -94,11 +94,39 @@ void TelemetryViewer::OnGuiDrawThresholdMode()
 //TODO: ToJson e FromJson
 json TelemetryViewer::ToJson() const
 {
-    json j;
+    json j = Component::ToJson();
+
+    j["telemetryMode"] = static_cast<int>(m_telemetryMode);
+    j["simulatedValue"] = m_simulatedValue;
+
+    j["rangeValueStart"] = m_rangeValueStart;
+    j["rangeValueEnd"] = m_rangeValueEnd;
+    j["rangeColorStart"] = m_rangeColorStart;
+    j["rangeColorEnd"] = m_rangeColorEnd;
+
+    j["thresholdValue"] = m_thresholdValue;
+    j["thresholdColorBefore"] = m_thresholdColorBefore;
+    j["thresholdColorAfter"] = m_thresholdColorAfter;
+
+    j["switchColorOff"] = m_switchColorOff;
+    j["switchColorOn"] = m_switchColorOn;
     return j;
 }
 
 void TelemetryViewer::FromJson(const json& j)
 {
+    m_telemetryMode = static_cast<TELEMETRY_MODE>(j.value("telemetryMode", 0));
+    m_simulatedValue = j.value("simulatedValue", 0.0f);
 
+    m_rangeValueStart = j.value("rangeValueStart", 0.0f);
+    m_rangeValueEnd = j.value("rangeValueEnd", 100.0f);
+    m_rangeColorStart = j["rangeColorStart"], vec4(1);
+    m_rangeColorEnd = j["rangeColorEnd"], vec4(1);
+
+    m_thresholdValue = j.value("thresholdValue", 50.0f);
+    m_thresholdColorBefore = j["thresholdColorBefore"], vec4(1);
+    m_thresholdColorAfter = j["thresholdColorAfter"], vec4(1);
+
+    m_switchColorOff = j["switchColorOff"], vec4(1);
+    m_switchColorOn = j["switchColorOn"], vec4(1);
 }

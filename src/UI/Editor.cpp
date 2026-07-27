@@ -263,13 +263,15 @@ void Editor::DrawInspectorPanel()
         return;
     }
 
+    bool active = m_selectedSceneObj->IsActive();
+    ImGui::Checkbox("##ActiveObjectCheckbox", &active);
+
+    ImGui::SameLine();
+
     char nameBuf[256];
     strcpy(nameBuf, m_selectedSceneObj->name.c_str());
     if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf)))
         m_selectedSceneObj->name = nameBuf;
-
-    bool active = m_selectedSceneObj->IsActive();
-    ImGui::Checkbox("##ActiveObjectCheckbox", &active);
 
     if (active != m_selectedSceneObj->IsActive())
         m_selectedSceneObj->SetIsActive(active);
@@ -315,6 +317,12 @@ void Editor::DrawInspectorPanel()
             comp->OnGuiDraw();
             ImGui::PopID();
         }
+    }
+
+    if (m_selectedSceneObj->GetComponent<TelemetryViewer>() == nullptr)
+    {
+        if (DrawButtonColored("+ Telemetry Viewer", BUTTON_COLORS::GREY))
+            m_selectedSceneObj->AddComponent(COMPONENT_TYPE::TELEMETRY_VIEWER);
     }
 
 

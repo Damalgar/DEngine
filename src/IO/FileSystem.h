@@ -14,25 +14,19 @@ class FileSystem
     {
         fs::path exePath = fs::weakly_canonical(fs::path(argv0));
         rootDir = exePath.parent_path();
+        userDir = rootDir / "User";
 
-        while (!fs::exists(rootDir / "src" / "Shaders") && rootDir.has_parent_path())
-            rootDir = rootDir.parent_path();
-
-        if (!std::filesystem::exists(rootDir / "src" / "Shaders")) {
-            std::cerr << "[FILESYSTEM] Can't find shaders dir from: " << rootDir << std::endl;
-        } else {
-            rootDir = rootDir / "src";
-            std::cout << "[FILESYSTEM] shaders dir found from : " << rootDir << std::endl;
-
-            userDir = rootDir / "User";
-            std::cout << "[FILESYSTEM] Creating user folders" << std::endl;
+        if (!fs::exists(userDir))
+        {
+            std::cout << "[FILESYSTEM] Creating user folders next to executable..." << std::endl;
             fs::create_directories(userDir / "Models");
             fs::create_directories(userDir / "Textures");
             fs::create_directories(userDir / "Materials");
             fs::create_directories(userDir / "ShadersCode");
-            fs::create_directories(userDir / "Shaders");
             fs::create_directories(userDir / "Scenes");
         }
+        else
+            std::cout << "[FILESYSTEM] Root directory set to: " << rootDir << std::endl;
     }
 
     static std::string GetAssetPath(const std::string& relativePath)

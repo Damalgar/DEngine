@@ -108,6 +108,12 @@ void Scene::FromJson(const json& j)
                     std::cerr << "[SCENE] Error: Parent with id " << obj->GetParentID() << "not found for" << obj->name << std::endl;
             }
         }
+
+        for (SceneObject* obj : m_sceneObjects)
+        {
+            if (obj->transform.GetParent() == nullptr)
+                obj->transform.GetModelMatrix();
+        }
     }
 }
 
@@ -125,8 +131,6 @@ SceneObject* Scene::InstantiateModelNode(Model* model, const ModelNode& node, Sc
         renderer->SetMeshIndices(node.meshIndices);
         renderer->SetModel(model);
         renderer->SetSharedMaterial(AssetManager::GetMaterial("DefaultMaterial"));
-
-        obj->AddComponent(COMPONENT_TYPE::TELEMETRY_VIEWER);
     }
     
     glm::vec3 scale, pos, skew;
