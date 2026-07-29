@@ -26,6 +26,9 @@ void Scene::Update()
 
 void Scene::Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos)
 {
+    m_currentViewMatrix = viewMatrix;
+    m_currentProjectionMatrix = projectionMatrix;
+    
     for (SceneObject* obj : m_sceneObjects)
     {
         if (!obj->IsActiveInHierarchy() || !TagManager::IsTagVisible(obj->GetTag()))
@@ -44,19 +47,55 @@ void Scene::AddObject(SceneObject* object)
 
 void Scene::RemoveObject(SceneObject* object)
 {
-    for (int i = 0; i < m_sceneObjects.size(); i++)
-    {
-        if (m_sceneObjects[i] == object)
+    if (!object)
+        return;
+    
+    if (object->transform.GetParent() != nullptr)
+        object->transform.SetParent(nullptr);
+
+    std::vector<SceneObject*> sceneObjectsToDelete;
+    CollectHierarchy(object, sceneObjectsToDelete);
+
+    std::unordered_set<SceneObject*> set(sceneObjectsToDelete.begin(), sceneObjectsToDelete.end());
+
+    m_sceneObjects.erase(
+        std::remove_if(m_sceneObjects.begin(), m_sceneObjects.end(), [&set](SceneObject* obj)
         {
-            RemoveObject(i);
-            return;
-        }
+            return set.find(obj) != set.end();
+        }),
+        m_sceneObjects.end()
+    );
+
+    for (auto it = sceneObjectsToDelete.rbegin(); it != sceneObjectsToDelete.rend(); ++it)
+    {
+        if (*it) 
+            (*it)->transform.SetParent(nullptr);
     }
+
+    for (SceneObject* obj : sceneObjectsToDelete)
+        delete obj;
 }
 
 void Scene::RemoveObject(int index)
 {
-    m_sceneObjects.erase(m_sceneObjects.begin() + index);
+    if (index >= 0 && index < m_sceneObjects.size())
+        RemoveObject(m_sceneObjects[index]);
+}
+
+SceneObject* Scene::CreateEmptyObject(SceneObject* parent)
+{
+    SceneObject* obj = new SceneObject("SceneObject");
+    obj->transform.SetParent(&parent->transform, false);
+    AddObject(obj);
+    return obj;
+}
+
+void Scene::CollectHierarchy(SceneObject* root, std::vector<SceneObject*>& hierarchy)
+{
+    hierarchy.push_back(root);
+
+    for (Transform* child : root->transform.GetChildren())
+        CollectHierarchy(child->GetSceneObject(), hierarchy);
 }
 
 json Scene::ToJson() const

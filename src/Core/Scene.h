@@ -20,8 +20,11 @@ class Scene : public ISerializable {
     void Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos);
 
     void AddObject(SceneObject* object);
+    SceneObject* CreateEmptyObject(SceneObject* parent = nullptr);
+
     void RemoveObject(SceneObject* object);
     void RemoveObject(int index);
+    void CollectHierarchy(SceneObject* root, std::vector<SceneObject*>& hierarchy);
     
     json ToJson() const override;
     void FromJson(const json& j) override;
@@ -30,7 +33,18 @@ class Scene : public ISerializable {
 
     SceneObject* InstantiateModelNode(Model* model, const ModelNode& node, SceneObject* parentObject);
 
+    void SetShowBoundingBoxes(const bool value) { m_showBoundingBoxes = value; }
+    void ToggleShowBoundingBoxes() { SetShowBoundingBoxes(!m_showBoundingBoxes); }
+    bool GetShowBoundingBoxes() const { return m_showBoundingBoxes; }
+
+    const mat4& GetViewMatrix() const { return m_currentViewMatrix; }
+    const mat4& GetProjectionMatrix() const { return m_currentProjectionMatrix; }
+
     private:
     std::vector<SceneObject*> m_sceneObjects;
     std::string m_name;
+
+    mat4 m_currentViewMatrix = mat4(1.0f);
+    mat4 m_currentProjectionMatrix = mat4(1.0f);
+    bool m_showBoundingBoxes = false;
 };

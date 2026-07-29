@@ -58,6 +58,12 @@ void MeshRenderer::Draw(const glm::mat4& viewMatrix, const glm::mat4& projection
         if (mesh)
             mesh->Draw();
     }
+
+    if (SceneManager::GetActiveScene()->GetShowBoundingBoxes())
+    {
+        BoundingBox box = GetGlobalBoundingBox();
+        Utils::DrawDebugBox(box, viewMatrix, projectionMatrix);
+    }
 }
 
 //TODO: ToJson e FromJson
@@ -114,4 +120,25 @@ void MeshRenderer::OnGuiDraw()
         text += material->GetName();
 
     TextUnformatted(text.c_str());
+}
+
+BoundingBox MeshRenderer::GetGlobalBoundingBox()
+{
+    if (!m_model || m_meshIndices.empty())
+        return BoundingBox();
+
+    BoundingBox combinedLocalBox;
+
+    for (unsigned int index : m_meshIndices)
+    {
+        const Mesh* mesh = m_model->GetMesh(index);
+        if (mesh)
+        {
+            const BoundingBox& box = mesh->GetBoundingBox();
+            combinedLocalBox.Combine(box);
+        }
+    }
+
+    mat4 modelMat = m_sceneObject->transform.GetModelMatrix();
+    return combinedLocalBox.GetTransformed(modelMat);
 }

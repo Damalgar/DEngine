@@ -1,5 +1,6 @@
 #include "Core/SceneObject.h"
 #include "Core/AssetManager.h"
+#include "Core/TagManager.h"
 #include <random>
 
 SceneObject::SceneObject() : SceneObject("SceneObject") {}
@@ -47,6 +48,7 @@ void SceneObject::FromJson(const json& j)
     m_ID = j.value("id", 0);
     m_parentID = j.value("parent_id", 0);
     m_tag = j.contains("tag") ? j["tag"].get<std::string>() : "Default";
+    TagManager::AddTag(m_tag);
 
     if (j.contains("transform"))
         transform.FromJson(j["transform"]);

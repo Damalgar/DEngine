@@ -51,3 +51,8 @@ void Mesh::Draw() const
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
+void Mesh::SetBoundingBox(BoundingBox& box)
+{
+    m_boundingBox = box;
+}

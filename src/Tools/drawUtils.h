@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <imgui_internal.h>
 
@@ -1056,6 +1057,53 @@ inline bool DrawButtonImage(ImTextureID tex, ImVec2 iconSize, BUTTON_COLORS colo
 
     return pressed;
 }
+
+template<typename T>
+inline bool DrawElementResearchMenu(const char* label, T& outSelected, const std::vector<ComboEntry<T>>& options,
+std::function<bool(T)> isExcluded = nullptr, BUTTON_COLORS buttonColor = BUTTON_COLORS::GREY)
+{
+    bool itemSelected = false;
+
+    if (DrawButtonColored(label, buttonColor))
+        ImGui::OpenPopup("ElemenetResearchPopup");
+
+    if (ImGui::BeginPopup("ElemenetResearchPopup"))
+    {
+        static ImGuiTextFilter filter;
+        
+        if (ImGui::IsWindowAppearing()) 
+        {
+            ImGui::SetKeyboardFocusHere();
+            filter.Clear(); 
+        }
+
+        filter.Draw("##search", ImGui::GetContentRegionAvail().x);
+        ImGui::Separator();
+
+        ImGui::BeginChild("ElementsList", ImVec2(0, 150), false);
+        for (const auto& option : options)
+        {
+            if (isExcluded && isExcluded(option.value))
+                continue;
+
+            if (!filter.PassFilter(option.name))
+                continue;
+
+            if (ImGui::Selectable(option.name))
+            {
+                outSelected = option.value;
+                itemSelected = true;
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndChild();
+        
+        ImGui::EndPopup();
+    }
+
+    return itemSelected;
+}
+
 
 namespace NotificationSystem {
 

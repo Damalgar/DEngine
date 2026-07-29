@@ -41,6 +41,7 @@ include_directories(
     src/Utils
     src/Textures
     src/Components
+    src/Physics
     src/Vendor/glad/include
     src/Vendor/assimp/include
     ${IMGUI_DIR}
@@ -103,6 +104,9 @@ set(SOURCES
 
     #===ICONS===
     src/Icons/IconsLoader.cpp
+
+    #===UTILS===
+    src/Utils/Utils.cpp
 
     #===IMGUI===
     ${IMGUI_SOURCES}

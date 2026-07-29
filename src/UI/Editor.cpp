@@ -71,6 +71,46 @@ void Editor::DrawPanels()
     ImGui::SetNextWindowClass(&window_class);
     DrawFileSystemPanel();
 
+    if (m_draggedNodeToMove != nullptr)
+    {
+        m_draggedNodeToMove->transform.SetParent(m_targetParentNode ? &m_targetParentNode->transform : nullptr);
+
+        m_draggedNodeToMove = nullptr;
+        m_targetParentNode = nullptr;
+    }
+
+    if (m_addObject)
+    {
+        if (SceneManager::GetActiveScene())
+        {
+            SceneManager::GetActiveScene()->CreateEmptyObject(m_addObjectParent);
+            m_addObjectParent = nullptr;
+        }
+
+        m_addObject = false;
+        m_addObjectParent = nullptr;
+    }
+
+    if (m_objectToDelete != nullptr)
+    {
+        if (SceneManager::GetActiveScene())
+        {
+            SceneManager::GetActiveScene()->RemoveObject(m_objectToDelete);
+
+            if (m_objectToDelete == m_selectedSceneObj)
+                m_selectedSceneObj = nullptr;
+        }
+
+        m_objectToDelete = nullptr;
+    }
+
+    if (m_selectObjectRaycast)
+    {
+        m_selectedSceneObj = m_objectToSelectRaycast;
+        m_selectObjectRaycast = false;
+    }
+
+
     ImGui::End();
 }
 
@@ -97,6 +137,7 @@ void Editor::DrawHierarchyPanel()
     }
 
     ImGui::Dummy(ImGui::GetContentRegionAvail());
+
     if (ImGui::BeginDragDropTarget())
     {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_HIERARCHY_NODE"))
@@ -110,14 +151,6 @@ void Editor::DrawHierarchyPanel()
             }
         }
         ImGui::EndDragDropTarget();
-    }
-
-    if (m_draggedNodeToMove != nullptr)
-    {
-        m_draggedNodeToMove->transform.SetParent(m_targetParentNode ? &m_targetParentNode->transform : nullptr);
-
-        m_draggedNodeToMove = nullptr;
-        m_targetParentNode = nullptr;
     }
 
     ImGui::PopStyleVar();
@@ -139,6 +172,20 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         m_selectedSceneObj = obj;
+
+    if (ImGui::BeginPopupContextItem())
+    {
+        if (ImGui::MenuItem("Delete"))
+            m_objectToDelete = obj;
+
+        if (ImGui::MenuItem("Add Empty Object"))
+        {
+            m_addObject = true;
+            m_addObjectParent = obj;
+        }
+
+        ImGui::EndPopup();
+    }
 
     if (ImGui::BeginDragDropSource())
     {
@@ -270,17 +317,15 @@ void Editor::DrawInspectorPanel()
 
     char nameBuf[256];
     strcpy(nameBuf, m_selectedSceneObj->name.c_str());
-    if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf)))
+    if (ImGui::InputText("##Name", nameBuf, sizeof(nameBuf)))
         m_selectedSceneObj->name = nameBuf;
 
     if (active != m_selectedSceneObj->IsActive())
         m_selectedSceneObj->SetIsActive(active);
 
-    SpacingH(10);
-
     const auto& allTags = TagManager::GetTags();
     std::string tag = m_selectedSceneObj->GetTag();
-    if (DrawStringCombo("Tag", &tag, allTags))
+    if (DrawStringCombo("Tag", &tag, allTags, 3))
     {
         m_selectedSceneObj->SetTag(tag);
     }
@@ -319,10 +364,15 @@ void Editor::DrawInspectorPanel()
         }
     }
 
-    if (m_selectedSceneObj->GetComponent<TelemetryViewer>() == nullptr)
+    ImGui::Separator();
+
+
+    COMPONENT_TYPE componentTypeOut;
+    if (DrawElementResearchMenu<COMPONENT_TYPE>("+ Component", componentTypeOut, m_availableComponentsOptions,
+        [&](COMPONENT_TYPE type){return m_selectedSceneObj->HasComponent(type);},
+        BUTTON_COLORS::GREY))
     {
-        if (DrawButtonColored("+ Telemetry Viewer", BUTTON_COLORS::GREY))
-            m_selectedSceneObj->AddComponent(COMPONENT_TYPE::TELEMETRY_VIEWER);
+        m_selectedSceneObj->AddComponent(componentTypeOut);
     }
 
 
@@ -349,9 +399,35 @@ void Editor::DrawScenePanel()
         ImVec2(0, 1), 
         ImVec2(1, 0)
     );
+    
+    ImVec2 imageTopLeft = ImGui::GetItemRectMin();
+    ImVec2 imageSize = ImGui::GetItemRectSize();
+    
+    if (SceneManager::GetActiveScene())
+    {
+        ImGui::SetCursorPos(ImVec2(0, 0));
+        TextUnformatted(SceneManager::GetActiveScene()->GetName().c_str());
 
-    ImGui::SetCursorPos(ImVec2(0, 0));
-    TextUnformatted(SceneManager::GetActiveScene()->GetName().c_str());
+        SpacingH(5);
+        ImGui::SameLine();
+        bool value = SceneManager::GetActiveScene()->GetShowBoundingBoxes();
+        if (ImGui::Checkbox("Bounding box", &value))
+            SceneManager::GetActiveScene()->SetShowBoundingBoxes(value);
+
+        if (isSceneHovered && InputsManager::IsMouseButtonPressed(ImGuiMouseButton_Left))
+        {
+            ImVec2 windowPos = ImGui::GetCursorScreenPos();
+            ImVec2 mouseAbsolutePos = ImGui::GetMousePos();
+            float mouseX = mouseAbsolutePos.x - imageTopLeft.x;
+            float mouseY = mouseAbsolutePos.y - imageTopLeft.y;
+
+            Scene* activeScene = SceneManager::GetActiveScene();
+            vec3 clickDirection = Utils::GetMouseRayDirection(mouseX, mouseY, imageSize.x, imageSize.y, activeScene->GetViewMatrix(), activeScene->GetProjectionMatrix());
+            m_objectToSelectRaycast = Utils::Raycast(mainCamera->GetPos(), clickDirection);
+
+            m_selectObjectRaycast = true;
+        }
+    }
 
     ImGui::End();
 }

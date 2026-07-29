@@ -23,6 +23,8 @@ class MeshRenderer : public Component {
     void FromJson(const json& j) override;
 
     void OnGuiDraw() override;
+    
+    BoundingBox GetGlobalBoundingBox();
 
     private:
     Model* m_model;

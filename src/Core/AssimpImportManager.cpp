@@ -30,6 +30,8 @@ Mesh AssimpImportManager::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
+    BoundingBox localBox;
+
     for (uint i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
@@ -50,6 +52,8 @@ Mesh AssimpImportManager::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
 
         vertex.color = vec4(1.0f);
         vertices.push_back(vertex);
+
+        localBox.Expand(vertex.pos);
     }
 
     for (uint i = 0; i < mesh->mNumFaces; i++)
@@ -60,7 +64,10 @@ Mesh AssimpImportManager::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
             indices.push_back(face.mIndices[j]);
     }
 
-    return Mesh(vertices, indices);
+    Mesh meshProcessed = Mesh(vertices, indices);
+    meshProcessed.SetBoundingBox(localBox);
+
+    return meshProcessed;
 }
 
 Model* AssimpImportManager::LoadModel(const std::string& path)
