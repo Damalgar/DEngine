@@ -50,7 +50,7 @@ void AssetManager::LoadAllShaders()
     {
         for (const auto& entry : fs::directory_iterator(shadersCodePath))
         {
-            std::string ext = entry.path().extension();
+            std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && ext == ".shader")
                 LoadShader(entry.path().stem().string());
         }
@@ -64,7 +64,7 @@ void AssetManager::LoadAllTextures()
     {
         for (const auto& entry : fs::directory_iterator(shadersCodePath))
         {
-            std::string ext = entry.path().extension();
+            std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                 LoadTexture(entry.path().stem().string());
         }
@@ -78,7 +78,7 @@ void AssetManager::LoadAllMaterials()
     {
         for (const auto& entry : fs::directory_iterator(shadersCodePath))
         {
-            std::string ext = entry.path().extension();
+            std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && ext == ".mat")
                 LoadMaterial(entry.path().stem().string());
         }
@@ -92,7 +92,7 @@ void AssetManager::LoadAllModels()
     {
         for (const auto& entry : fs::directory_iterator(shadersCodePath))
         {
-            std::string ext = entry.path().extension();
+            std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && (ext == ".obj" || ext == ".fbx"))
                 LoadModel(entry.path().stem().string());
         }

@@ -64,7 +64,7 @@ namespace Utils
     /// @param outPosition Output parameter for the new local position
     /// @param outRotation Output parameter for the new local rotation (IN DEGREES)
     /// @param outScale Output parameter for the new local scale
-    void LocalFromGlobal(const mat4& oldGlobalMatrix, const mat4& newParentGlobalMatrix, vec3& outPosition, vec3& outRotation, vec3& outScale);
+    void LocalFromGlobal(const mat4& oldGlobalMatrix, const mat4& newParentGlobalMatrix, vec3& outPosition, quat& outRotation, vec3& outScale);
 
     /// @brief Draws a Bounding Box for debug
     /// @param viewMatrix view matrix (M.V.P. model) 

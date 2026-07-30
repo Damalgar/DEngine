@@ -1,8 +1,10 @@
 #include "Core/Transform.h"
+#include "Utils/Utils.h"
 #include <iostream>
 
 Transform::Transform(SceneObject* sceneObject, Transform* parent)
-    : m_position(0.0f), m_rotation(0.0f), m_scale(1.0f), m_modelMatrix(1.0f), m_normalMatrix(1.0f), m_sceneObject(sceneObject)
+    : m_position(0.0f), m_rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)), m_eulerAngles(0.0f), m_scale(1.0f),
+        m_modelMatrix(1.0f), m_normalMatrix(1.0f), m_sceneObject(sceneObject)
 {
     if (parent)
         SetParent(parent);
@@ -40,7 +42,12 @@ void Transform::SetParent(Transform* newParent, bool keepWorldTransform)
     if (keepWorldTransform)
     {
         mat4 parentGlobal = m_parent ? m_parent->GetModelMatrix() : mat4(1.0f);
-        Utils::LocalFromGlobal(oldGlobalMatrix, parentGlobal, m_position, m_rotation, m_scale);
+        vec3 newPos, newScale;
+        quat newRot;
+        Utils::LocalFromGlobal(oldGlobalMatrix, parentGlobal, newPos, newRot, newScale);
+        SetPosition(newPos);
+        SetRotation(newRot); 
+        SetScale(newScale);
     }
 
     SetDirty();
@@ -62,7 +69,7 @@ void Transform::UpdateMatrices()
     if (!m_isDirty)
         return;
 
-    mat4 localMatrix = Utils::GetModelMatrix(m_position, m_rotation, m_scale);
+    mat4 localMatrix = glm::translate(mat4(1.0f), m_position) * glm::toMat4(m_rotation) * glm::scale(mat4(1.0f), m_scale);
     if (m_parent) 
         m_modelMatrix = m_parent->GetModelMatrix() * localMatrix;
     else
@@ -77,7 +84,7 @@ json Transform::ToJson() const
 {
     json j;
     j["position"] = m_position;
-    j["rotation"] = m_rotation;
+    j["rotation"] = m_eulerAngles;
     j["scale"] = m_scale;
     return j;
 }
@@ -85,7 +92,7 @@ json Transform::ToJson() const
 void Transform::FromJson(const json& j)
 {
     m_position = j.contains("position") ? j["position"].get<vec3>() : vec3(0.0f);
-    m_rotation = j.contains("rotation") ? j["rotation"].get<vec3>() : vec3(0.0f);
+    m_eulerAngles= j.contains("rotation") ? j["rotation"].get<vec3>() : vec3(0.0f);
     m_scale = j.contains("scale") ? j["scale"].get<vec3>() : vec3(1.0f);
     m_isDirty = true;
 }
@@ -103,3 +110,18 @@ bool Transform::IsDescendantOf(Transform* potentialAncestor) const
     }
     return false;
 }
+
+void Transform::SetRotation(const vec3& eulerDegrees)
+{
+    m_eulerAngles = eulerDegrees;
+    m_rotation = quat(radians(m_eulerAngles));
+    SetDirty();
+}
+
+void Transform::SetRotation(const quat& quatRot)
+{
+    m_rotation = quatRot;
+    m_eulerAngles = degrees(eulerAngles(m_rotation));
+    SetDirty();
+}
+

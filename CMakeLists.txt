@@ -6,13 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-    add_compile_options(/W3 /wd4244 /wd4018 /wd4996)
+    add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 endif()
 
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+if(MSVC)
+    string(REPLACE "/W3" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
 
 add_subdirectory(src/Vendor/assimp)
 
@@ -25,6 +30,7 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    ${IMGUI_DIR}/ImGuizmo.cpp
 )
 
 include_directories(
@@ -44,6 +50,7 @@ include_directories(
     src/Physics
     src/Vendor/glad/include
     src/Vendor/assimp/include
+    src/Vendor/glm
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
 )
@@ -53,7 +60,7 @@ find_package(OpenGL REQUIRED)
 if(WIN32)
     set(GLFW_DIR "${CMAKE_SOURCE_DIR}/src/Vendor/GLFW")
     include_directories(${GLFW_DIR}/include)
-    link_directories(${GLFW_DIR}/lib)
+    link_directories(${GLFW_DIR}/lib-vc2022)
 endif()
 
 if(UNIX AND NOT APPLE)
@@ -112,9 +119,9 @@ set(SOURCES
     ${IMGUI_SOURCES}
 )
 
-if(WIN32)
-    list(APPEND SOURCES src/Icons/resource.rc)
-endif()
+#if(WIN32)
+#    list(APPEND SOURCES src/Icons/resource.rc)
+#endif()
 
 if(WIN32)
     add_executable(DEngine
@@ -122,8 +129,10 @@ if(WIN32)
         ${SOURCES}
     )
     target_link_libraries(DEngine PRIVATE glfw3 opengl32 gdi32 shell32 comdlg32 ole32 assimp)
+    target_include_directories(DEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Vendor/glm)
     if(MSVC)
         set_target_properties(DEngine PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
+        target_compile_options(DEngine PRIVATE /W3 /wd4244 /wd4018 /wd4996)
     endif()
 elseif(UNIX AND NOT APPLE)
     add_executable(DEngine 

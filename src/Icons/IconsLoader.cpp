@@ -14,6 +14,10 @@ void IconsLoader::LoadIcons(GLFWwindow* window)
     LoadTextureFromMemory(modelIcon_png, modelIcon_png_len, &modelIconText);
     LoadTextureFromMemory(sceneIcon_png, sceneIcon_png_len, &sceneIconText);
     LoadTextureFromMemory(textureIcon_png, textureIcon_png_len, &textureIconText);
+    LoadTextureFromMemory(BoundingBoxIcon_png, BoundingBoxIcon_png_len, &boundingBoxIconText);
+    LoadTextureFromMemory(Gizmos_TranslateIcon_png, Gizmos_TranslateIcon_png_len, &gizmosTranslateIconText);
+    LoadTextureFromMemory(Gizmos_RotateIcon_png, Gizmos_RotateIcon_png_len, &gizmosRotateIconText);
+    LoadTextureFromMemory(Gizmos_ScaleIcon_png, Gizmos_ScaleIcon_png_len, &gizmosScaleIconText);
     //LoadAppIcon(window);
 }
 

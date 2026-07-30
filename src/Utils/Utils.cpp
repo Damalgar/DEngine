@@ -59,20 +59,14 @@ namespace Utils
         return transpose(inverse(mat3(modelMatrix)));
     }
 
-    void LocalFromGlobal(const mat4& oldGlobalMatrix, const mat4& newParentGlobalMatrix, vec3& outPosition, vec3& outRotation, vec3& outScale)
+    void LocalFromGlobal(const mat4& oldGlobalMatrix, const mat4& newParentGlobalMatrix, vec3& outPosition, quat& outRotation, vec3& outScale)
     {
         mat4 newLocalMatrix = glm::inverse(newParentGlobalMatrix) * oldGlobalMatrix;
-        quat rotationQuat;
+        
         vec3 skew;
         vec4 perspective;
-
-        glm::decompose(newLocalMatrix, outScale, rotationQuat, outPosition, skew, perspective);
         
-        mat4 rotationMatrix = glm::mat4_cast(rotationQuat);
-        float radY, radX, radZ;
-        glm::extractEulerAngleYXZ(rotationMatrix, radY, radX, radZ);
-
-        outRotation = vec3(glm::degrees(radX), glm::degrees(radY), glm::degrees(radZ));
+        glm::decompose(newLocalMatrix, outScale, outRotation, outPosition, skew, perspective);
     }
 
     void DrawDebugBox(const BoundingBox& box, const mat4& viewMatrix, const mat4& projectionMatrix)
@@ -121,11 +115,15 @@ namespace Utils
         debugShader->SetMat4("modelMatrix", modelMatrix);
         debugShader->SetMat4("viewMatrix", viewMatrix);
         debugShader->SetMat4("projectionMatrix", projectionMatrix);
-        debugShader->SetVec4("color", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+        debugShader->SetVec4("material.tintColor", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        glLineWidth(7.0f);
 
         glBindVertexArray(vao);
         glDrawArrays(GL_LINES, 0, 24); 
         glBindVertexArray(0);
+
+        glLineWidth(1.0f);
     }
 
     bool RayIntersectsBoundingBox(const vec3& origin, const vec3& direction, const BoundingBox& box, float& outDistance)

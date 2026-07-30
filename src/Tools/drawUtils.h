@@ -287,16 +287,15 @@ inline bool DrawFieldString(const char* label, std::string& str, int maxLength, 
     if (!sameLine) ImGui::Text("%s", label);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / invSize);
     
-    char buffer[maxLength];
-    memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "%s", str.c_str());
+    std::vector<char> buffer(maxLength, '\0');
+    snprintf(buffer.data(), buffer.size(), "%s", str.c_str());
     
     if (multiline)
     {
         ImVec2 size = ImVec2(0.0f, multilineHeight);
-        if (ImGui::InputTextMultiline("##input", buffer, sizeof(buffer), size))
+        if (ImGui::InputTextMultiline("##input", buffer.data(), buffer.size(), size))
         {
-            str = buffer;
+            str = buffer.data();
             valueChanged = true;
         }
 
@@ -309,9 +308,9 @@ inline bool DrawFieldString(const char* label, std::string& str, int maxLength, 
             edited = true;
         }
     }
-    else if (ImGui::InputText("##input", buffer, sizeof(buffer))) 
+    else if (ImGui::InputText("##input", buffer.data(), buffer.size())) 
     {
-        str = buffer;
+        str = buffer.data();
         valueChanged = true;
     }
 
@@ -342,13 +341,12 @@ inline bool DrawFieldStringPlaceHolder(const char* label, std::string& str, int 
     ImGui::PushID(label);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / invSize);
     
-    char buffer[maxLength];
-    memset(buffer, 0, sizeof(buffer));
-    snprintf(buffer, sizeof(buffer), "%s", str.c_str());
-    
-    if (ImGui::InputTextWithHint("##input", label, buffer, sizeof(buffer))) 
+    std::vector<char> buffer(maxLength, '\0');
+    snprintf(buffer.data(), buffer.size(), "%s", str.c_str());
+
+    if (ImGui::InputTextWithHint("##input", label, buffer.data(), buffer.size())) 
     {
-        str = buffer;
+        str = buffer.data();
         valueChanged = true;
     }
 
@@ -485,7 +483,7 @@ inline bool DrawHybridFloat(const char* label, float* variable, float v_min, flo
     return returnEdit ? edited : valueChanged;
 }
 
-inline bool DrawFieldFloat2(const char* label, float* v1, float* v2, int v_min, int v_max, bool returnEdit = false, const char* format = "%.1f",
+inline bool DrawFieldFloat2(const char* label, float* v1, float* v2, float v_min, float v_max, bool returnEdit = false, const char* format = "%.1f",
     float warning_treshold = 9999999, std::string warning_title = "", std::string warning_text = "", bool spacing = true) {
     
     bool edited = false;

@@ -11,6 +11,10 @@
 #include "Icons/modelIcon.h"
 #include "Icons/sceneIcon.h"
 #include "Icons/textureIcon.h"
+#include "Icons/BoundingBoxIcon.h"
+#include "Icons/Gizmos_TranslateIcon.h"
+#include "Icons/Gizmos_RotateIcon.h"
+#include "Icons/Gizmos_ScaleIcon.h"
 
 class IconsLoader {
     public:
@@ -21,6 +25,10 @@ class IconsLoader {
     inline static GLuint modelIconText = 0;
     inline static GLuint sceneIconText = 0;
     inline static GLuint textureIconText = 0;
+    inline static GLuint boundingBoxIconText = 0;
+    inline static GLuint gizmosTranslateIconText = 0;
+    inline static GLuint gizmosRotateIconText = 0;
+    inline static GLuint gizmosScaleIconText = 0;
 
     static void LoadIcons(GLFWwindow* window);
     static void LoadAppIcon(GLFWwindow* window);

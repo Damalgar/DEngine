@@ -3,6 +3,7 @@
 #include "Core/SceneObject.h"
 #include "Core/SceneManager.h"
 #include "Core/TagManager.h"
+#include "Vendor/imgui/ImGuizmo.h"
 
 
 Application::Application()
@@ -43,6 +44,8 @@ int Application::Init(int argc, char* argv0)
     FontsLoader::InitializeFonts(io);
 
     SetupImGuiStyle();
+    SetupImGuizmoStyle();
+
     ImGui_ImplGlfw_InitForOpenGL(m_window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
 
@@ -91,6 +94,7 @@ void Application::StartRenderCycle()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 
     glEnable(GL_DEPTH_TEST);
     int display_w, display_h;
@@ -232,6 +236,24 @@ void Application::SetupImGuiStyle()
     colors[ImGuiCol_TabActive]            = accentColor; 
     colors[ImGuiCol_TabUnfocused]         = ImVec4(0.09f, 0.11f, 0.17f, 1.00f); 
     colors[ImGuiCol_TabUnfocusedActive]   = ImVec4(0.12f, 0.16f, 0.22f, 1.00f); 
+}
+
+void Application::SetupImGuizmoStyle()
+{
+    ImGuizmo::Style& gizmoStyle = ImGuizmo::GetStyle();
+
+    gizmoStyle.TranslationLineThickness = 5.0f;
+    gizmoStyle.TranslationLineArrowSize = 8.0f;
+
+    gizmoStyle.RotationLineThickness = 3.0f;
+    gizmoStyle.RotationOuterLineThickness = 4.0f;
+
+    gizmoStyle.ScaleLineThickness = 5.0f;
+    gizmoStyle.ScaleLineCircleSize = 8.0f;
+
+    gizmoStyle.Colors[ImGuizmo::DIRECTION_X] = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+    gizmoStyle.Colors[ImGuizmo::DIRECTION_Y] = ImVec4(0.2f, 1.0f, 0.2f, 1.0f);
+    gizmoStyle.Colors[ImGuizmo::DIRECTION_Z] = ImVec4(0.2f, 0.2f, 1.0f, 1.0f);
 }
 
 const std::vector<SceneObject*>& Application::GetSceneObjects() const

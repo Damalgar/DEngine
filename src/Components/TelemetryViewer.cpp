@@ -1,6 +1,7 @@
 #include "TelemetryViewer.h"
 #include "Core/SceneObject.h"
 #include "Components/MeshRenderer.h"
+#include "Utils/Utils.h"
 
 void TelemetryViewer::Update()
 {

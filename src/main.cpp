@@ -27,19 +27,3 @@ int main(int argc, char* argv[])
 #endif
     return 0;
 }
-
-//TODO list//
-/*
-ThumbnailGenerator per i materiali e i modelli
-Finire asset manager
-inspector modulare
-component dataView (sceglie che dato raccogliere e come visualizzarlo sull'oggetto)
-drag & drop in scena
-Hierarchy parentale con trasformazioni parentali
-Rotazione su assi e punti fissi
-gizmos
-
-poi
-capire come costruire la macchina (farla da 0? farla già tutta su blender?), raccogliere i dati e creare la timeline
-sistema di animazioni (keyframe?)
-*/

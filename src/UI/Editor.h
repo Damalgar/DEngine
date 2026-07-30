@@ -7,6 +7,7 @@
 #include "Core/Scene.h"
 #include "Tools/FsDialog.h"
 #include "Components/include_components.h"
+#include "Vendor/imgui/ImGuizmo.h"
 
 class Editor
 {
@@ -31,6 +32,8 @@ class Editor
 
     bool m_selectObjectRaycast = false;
     SceneObject* m_objectToSelectRaycast = nullptr;
+
+    ImGuizmo::OPERATION m_currentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
 
     void DrawHierarchyPanel();
     void DrawScenePanel();

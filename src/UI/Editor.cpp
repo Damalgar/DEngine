@@ -2,6 +2,10 @@
 #include <Core/Application.h>
 #include "UI/EditorCustomizations.h"
 #include "Core/TagManager.h"
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 
 Editor::Editor(GLuint sceneTextureID)
 {
@@ -336,7 +340,7 @@ void Editor::DrawInspectorPanel()
 
     Transform* tr = &m_selectedSceneObj->transform;
     vec3 pos = tr->GetPosition();
-    vec3 rot = tr->GetRotation();
+    vec3 rot = tr->GetEulerAngles();
     vec3 scale = tr->GetScale();
 
     if (DrawFloatCoords3("position", &pos.x, 3))
@@ -387,8 +391,6 @@ void Editor::DrawScenePanel()
 
     bool isSceneHovered = ImGui::IsWindowHovered();
     Camera* mainCamera = Application::Instance->GetCamera();
-    if (mainCamera)
-        mainCamera->SetCanInteract(isSceneHovered);
 
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
     m_viewportSize = viewportPanelSize;
@@ -402,27 +404,88 @@ void Editor::DrawScenePanel()
     
     ImVec2 imageTopLeft = ImGui::GetItemRectMin();
     ImVec2 imageSize = ImGui::GetItemRectSize();
+    Scene* activeScene = SceneManager::GetActiveScene();
     
-    if (SceneManager::GetActiveScene())
+    if (activeScene)
     {
+        //Needed to avoid raycasting pass on UI
+        bool isHoveringUI = false;
+        bool isHoveringGizmos = false;
+        bool isUsingGizmos = false;
+
         ImGui::SetCursorPos(ImVec2(0, 0));
-        TextUnformatted(SceneManager::GetActiveScene()->GetName().c_str());
+        TextUnformatted(activeScene->GetName().c_str());
 
-        SpacingH(5);
-        ImGui::SameLine();
-        bool value = SceneManager::GetActiveScene()->GetShowBoundingBoxes();
-        if (ImGui::Checkbox("Bounding box", &value))
-            SceneManager::GetActiveScene()->SetShowBoundingBoxes(value);
+        if (DrawButtonImage(IconsLoader::gizmosTranslateIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "transform", true, 
+            m_currentGizmoOperation==ImGuizmo::OPERATION::TRANSLATE))
+            m_currentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+        isHoveringUI |= ImGui::IsItemHovered();
 
-        if (isSceneHovered && InputsManager::IsMouseButtonPressed(ImGuiMouseButton_Left))
+        if (DrawButtonImage(IconsLoader::gizmosRotateIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "rotate", true, 
+            m_currentGizmoOperation==ImGuizmo::OPERATION::ROTATE))
+            m_currentGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+        isHoveringUI |= ImGui::IsItemHovered();
+
+        if (DrawButtonImage(IconsLoader::gizmosScaleIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "scale", true, 
+            m_currentGizmoOperation==ImGuizmo::OPERATION::SCALE))
+            m_currentGizmoOperation = ImGuizmo::OPERATION::SCALE;
+        isHoveringUI |= ImGui::IsItemHovered();
+
+        Spacing(5);
+
+        if (DrawButtonImage(IconsLoader::boundingBoxIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "BoundingBox", true, 
+            activeScene->GetShowBoundingBoxes()))
+            activeScene->ToggleShowBoundingBoxes();
+        isHoveringUI |= ImGui::IsItemHovered();
+
+        mat4 viewMat = activeScene->GetViewMatrix();
+        mat4 projectionMat = activeScene->GetProjectionMatrix();
+        mat4 modelMat = m_selectedSceneObj ? m_selectedSceneObj->transform.GetModelMatrix() : mat4(1.0);
+
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::SetDrawlist();
+        ImGuizmo::SetRect(imageTopLeft.x, imageTopLeft.y, imageSize.x, imageSize.y);
+
+        if (m_selectedSceneObj && mainCamera)
         {
-            ImVec2 windowPos = ImGui::GetCursorScreenPos();
+            ImGuizmo::Manipulate
+            (
+                glm::value_ptr(viewMat),
+                glm::value_ptr(projectionMat),
+                m_currentGizmoOperation,
+                ImGuizmo::MODE::LOCAL,
+                glm::value_ptr(modelMat)
+            );
+
+            isHoveringGizmos = ImGuizmo::IsOver();
+            isUsingGizmos = ImGuizmo::IsUsing();
+
+            if (isUsingGizmos)
+            {
+                vec3 newTranslation;
+                quat newRotationQuat;
+                vec3 newScale;
+                vec3 skew;
+                vec4 perspective;
+
+                glm::decompose(modelMat, newScale, newRotationQuat, newTranslation, skew, perspective);
+                
+                m_selectedSceneObj->transform.SetPosition(newTranslation);
+                m_selectedSceneObj->transform.SetRotation(newRotationQuat);
+                m_selectedSceneObj->transform.SetScale(newScale);
+            }
+        }
+
+        if (mainCamera)
+            mainCamera->SetCanInteract(isSceneHovered && !isUsingGizmos && !isHoveringUI);
+
+        if (isSceneHovered && !isHoveringGizmos && !isHoveringUI && InputsManager::IsMouseButtonPressed(ImGuiMouseButton_Left))
+        {
             ImVec2 mouseAbsolutePos = ImGui::GetMousePos();
             float mouseX = mouseAbsolutePos.x - imageTopLeft.x;
             float mouseY = mouseAbsolutePos.y - imageTopLeft.y;
-
-            Scene* activeScene = SceneManager::GetActiveScene();
-            vec3 clickDirection = Utils::GetMouseRayDirection(mouseX, mouseY, imageSize.x, imageSize.y, activeScene->GetViewMatrix(), activeScene->GetProjectionMatrix());
+            
+            vec3 clickDirection = Utils::GetMouseRayDirection(mouseX, mouseY, imageSize.x, imageSize.y, viewMat, projectionMat);
             m_objectToSelectRaycast = Utils::Raycast(mainCamera->GetPos(), clickDirection);
 
             m_selectObjectRaycast = true;
@@ -445,7 +508,7 @@ void Editor::DrawFileSystemPanel()
                 std::string path = FsDialog::OpenModelDialog("Select model to import");
                 if (path != "")
                 {
-                    std::string ext = fs::path(path).extension();
+                    std::string ext = fs::path(path).extension().string();
                     if (ext == ".obj" || ext == ".fbx")
                     {
                         if (FileSystem::ImportAsset(path, "User", "Models"))
@@ -475,7 +538,7 @@ void Editor::DrawFileSystemPanel()
 
                 for (const auto& entry : fs::directory_iterator(modelsPath))
                 {
-                    std::string ext = entry.path().extension();
+                    std::string ext = entry.path().extension().string();
                     if (entry.is_regular_file() && (ext == ".obj" || ext == ".fbx"))
                     {
                         std::string filename = entry.path().stem().string();
@@ -517,7 +580,7 @@ void Editor::DrawFileSystemPanel()
                 std::string path = FsDialog::OpenImageDialog("Select an image to import");
                 if (path != "")
                 {
-                    std::string ext = fs::path(path).extension();
+                    std::string ext = fs::path(path).extension().string();
                     if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
                     {
                         if (FileSystem::ImportAsset(path, "User", "Textures"))
@@ -547,7 +610,7 @@ void Editor::DrawFileSystemPanel()
 
                 for (const auto& entry : fs::directory_iterator(modelsPath))
                 {
-                    std::string ext = entry.path().extension();
+                    std::string ext = entry.path().extension().string();
                     if (entry.is_regular_file() && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
                     {
                         std::string filename = entry.path().stem().string();
@@ -607,7 +670,7 @@ void Editor::DrawFileSystemPanel()
 
                 for (const auto& entry : fs::directory_iterator(shadersCodePath))
                 {
-                    std::string ext = entry.path().extension();
+                    std::string ext = entry.path().extension().string();
                     if (entry.is_regular_file() && (ext == ".vert" || ext == ".frag"))
                     {
                         std::string filename = entry.path().stem().string();
@@ -749,7 +812,10 @@ void Editor::DrawFileSystemPanel()
 
         if (ImGui::BeginTabItem("Scenes"))
         {
-            if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY));
+            if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY))
+            {
+
+            }
 
             ImGui::Spacing();
 

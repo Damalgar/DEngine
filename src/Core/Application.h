@@ -50,6 +50,8 @@ class Application {
 
     void SetupDefaults();
     void SetupImGuiStyle();
+    void SetupImGuizmoStyle();
+    
     void StartRenderCycle();
     void EndRenderCycle();
     GLuint GenerateFrameBuffer();
