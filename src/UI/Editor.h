@@ -9,6 +9,12 @@
 #include "Components/include_components.h"
 #include "Vendor/imgui/ImGuizmo.h"
 
+enum class BOTTOM_PANEL
+{
+    FILESYSTEM = 0,
+    CONSOLE
+};
+
 class Editor
 {
     public:
@@ -24,7 +30,9 @@ class Editor
     SceneObject* m_selectedSceneObj = nullptr;
     SceneObject* m_objectToDelete = nullptr;
     
-    bool m_addObject = false;
+    bool m_addEmptyObject = false;
+    bool m_addCubeObject = false;
+    
     SceneObject* m_addObjectParent = nullptr;
 
     SceneObject* m_draggedNodeToMove = nullptr;
@@ -33,11 +41,13 @@ class Editor
     bool m_selectObjectRaycast = false;
     SceneObject* m_objectToSelectRaycast = nullptr;
 
+    BOTTOM_PANEL m_bottomPanelActiveType = BOTTOM_PANEL::FILESYSTEM;
+
     ImGuizmo::OPERATION m_currentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
 
     void DrawHierarchyPanel();
     void DrawScenePanel();
-    void DrawFileSystemPanel();
+    void DrawBottomPanel();
     void DrawInspectorPanel();
     void DrawHierarchyNode(SceneObject* obj);
     void DrawTagsPanel();

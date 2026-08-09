@@ -4,6 +4,7 @@
 #include "Vendor/json.hpp"
 #include "Core/ISerializable.h"
 #include "Tools/drawUtils.h"
+#include "IO/Console.h"
 
 class SceneObject;
 
@@ -22,7 +23,7 @@ class Component : public ISerializable
 
         if (sceneObject == nullptr)
         {
-            std::cerr << "[COMPONENT] added component to a null sceneObject" << std::endl;
+            Console::LogError("added component to a null sceneObject");
             return;
         }
 

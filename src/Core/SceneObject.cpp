@@ -93,7 +93,7 @@ Component* SceneObject::AddComponent(COMPONENT_TYPE componentType)
         newComp = std::make_unique<MeshRenderer>(this);
         break;
     default:
-        std::cerr << "[SCENE OBJECT] Unknown component type requested" << std::endl;
+        Console::LogWarn("Unknown component type requested for " + name, LOG_CATEGORY::SCENE);
         return nullptr;
     }
 

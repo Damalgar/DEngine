@@ -4,17 +4,20 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Icons/materialIcon.h"
-#include "Icons/fragmentShaderIcon.h"
-#include "Icons/vertexShaderIcon.h"
-#include "Icons/shaderIcon.h"
-#include "Icons/modelIcon.h"
-#include "Icons/sceneIcon.h"
-#include "Icons/textureIcon.h"
-#include "Icons/BoundingBoxIcon.h"
-#include "Icons/Gizmos_TranslateIcon.h"
-#include "Icons/Gizmos_RotateIcon.h"
-#include "Icons/Gizmos_ScaleIcon.h"
+#include "Icons/Images/materialIcon.h"
+#include "Icons/Images/fragmentShaderIcon.h"
+#include "Icons/Images/vertexShaderIcon.h"
+#include "Icons/Images/shaderIcon.h"
+#include "Icons/Images/modelIcon.h"
+#include "Icons/Images/sceneIcon.h"
+#include "Icons/Images/textureIcon.h"
+#include "Icons/Images/BoundingBoxIcon.h"
+#include "Icons/Images/Gizmos_TranslateIcon.h"
+#include "Icons/Images/Gizmos_RotateIcon.h"
+#include "Icons/Images/Gizmos_ScaleIcon.h"
+#include "Icons/Images/InfoIcon.h"
+#include "Icons/Images/WarningIcon.h"
+#include "Icons/Images/ErrorIcon.h"
 
 class IconsLoader {
     public:
@@ -29,6 +32,9 @@ class IconsLoader {
     inline static GLuint gizmosTranslateIconText = 0;
     inline static GLuint gizmosRotateIconText = 0;
     inline static GLuint gizmosScaleIconText = 0;
+    inline static GLuint infoIconText = 0;
+    inline static GLuint warningIconText = 0;
+    inline static GLuint errorIconText = 0;
 
     static void LoadIcons(GLFWwindow* window);
     static void LoadAppIcon(GLFWwindow* window);

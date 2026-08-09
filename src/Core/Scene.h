@@ -21,6 +21,7 @@ class Scene : public ISerializable {
 
     void AddObject(SceneObject* object);
     SceneObject* CreateEmptyObject(SceneObject* parent = nullptr);
+    SceneObject* CreateCubeObject(SceneObject* parent = nullptr);
 
     void RemoveObject(SceneObject* object);
     void RemoveObject(int index);

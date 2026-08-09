@@ -41,13 +41,13 @@ include_directories(
     src/Fonts
     src/Shaders
     src/Graphics
-    src/Graphics/Mesh
     src/IO
     src/Render
     src/Utils
     src/Textures
     src/Components
     src/Physics
+    src/UI/Panels
     src/Vendor/glad/include
     src/Vendor/assimp/include
     src/Vendor/glm
@@ -85,9 +85,11 @@ set(SOURCES
 
     #===IO===
     src/IO/InputsManager.cpp
+    src/IO/Console.cpp
 
     #===GRAPHICS===
     src/Graphics/Camera.cpp
+    src/Graphics/PrimitiveFactory.cpp
 
     #===RENDER===
     src/Render/Texture.cpp
@@ -108,6 +110,10 @@ set(SOURCES
 
     #===UI===
     src/UI/Editor.cpp
+    
+    #===UI/PANELS===
+    src/UI/Panels/UIFileSystem.cpp
+    src/UI/Panels/UIConsole.cpp
 
     #===ICONS===
     src/Icons/IconsLoader.cpp

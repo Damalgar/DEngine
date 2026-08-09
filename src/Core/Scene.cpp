@@ -1,6 +1,8 @@
 #include "Core/Scene.h"
 #include "Components/MeshRenderer.h"
 #include "Core/TagManager.h"
+#include "Graphics/PrimitiveFactory.h"
+#include "IO/Console.h"
 
 Scene::Scene(std::string name)
 {
@@ -90,6 +92,21 @@ SceneObject* Scene::CreateEmptyObject(SceneObject* parent)
     return obj;
 }
 
+SceneObject* Scene::CreateCubeObject(SceneObject* parent)
+{
+    Model* cubeModel = AssetManager::GetModel("Primitive_Cube");
+
+    if (!cubeModel)
+        return nullptr;
+
+    SceneObject* obj = InstantiateModelNode(cubeModel, cubeModel->GetRootNode(), parent);
+
+    if (obj)
+        obj->name = "Cube";
+
+    return obj;
+}
+
 void Scene::CollectHierarchy(SceneObject* root, std::vector<SceneObject*>& hierarchy)
 {
     hierarchy.push_back(root);
@@ -144,7 +161,7 @@ void Scene::FromJson(const json& j)
                     obj->transform.SetParent(&parentObj->transform, false);
                 }
                 else
-                    std::cerr << "[SCENE] Error: Parent with id " << obj->GetParentID() << "not found for" << obj->name << std::endl;
+                    Console::LogError("Parent with id " + std::to_string(obj->GetParentID()) + " not found for " + obj->name, LOG_CATEGORY::SCENE);
             }
         }
 
@@ -183,7 +200,7 @@ SceneObject* Scene::InstantiateModelNode(Model* model, const ModelNode& node, Sc
 
     obj->transform.SetPosition(pos);
     obj->transform.SetScale(scale);
-    obj->transform.SetRotation(glm::vec3(glm::degrees(radX), glm::degrees(radY), glm::degrees(radZ)));
+    obj->transform.SetRotation(rotQuat);
 
     if (parentObject)
         obj->transform.SetParent(&parentObject->transform, false);

@@ -48,4 +48,6 @@ class AssetManager {
     inline static std::unordered_map<std::string, Model*> modelsMap;
     inline static std::unordered_map<std::string, Material*> materialsMap;
     inline static std::unordered_map<std::string, Shader*> shadersMap;
+
+    static void InitProceduralModels();
 };

@@ -1,4 +1,5 @@
 #include "Texture.h"
+#include "IO/Console.h"
 
 Texture::Texture(const std::string& path)
     : m_textureID(0), m_filePath(path), m_width(0), m_height(0), m_channels(0)
@@ -9,7 +10,7 @@ Texture::Texture(const std::string& path)
 
     if (!imageData)
     {
-        std::cerr << "[TEXTURE] error loading " << path << std::endl;
+        Console::LogError("error loading " + path);
         return;
     }
 

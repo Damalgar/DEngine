@@ -1,4 +1,5 @@
 #include "Core/AssimpImportManager.h"
+#include "IO/Console.h"
 
 glm::mat4 AssimpImportManager::ConvertMatrixToGLM(const aiMatrix4x4& from)
 {
@@ -79,7 +80,8 @@ Model* AssimpImportManager::LoadModel(const std::string& path)
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cerr << "[ASSIMP] Loading error:\n" << importer.GetErrorString() << std::endl;
+        std::string errorMessage = importer.GetErrorString();
+        Console::LogError("Loading error:\n" +  errorMessage, LOG_CATEGORY::SYSTEM);
         return nullptr;
     }
 

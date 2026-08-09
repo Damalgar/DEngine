@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include "IO/FileSystem.h"
 #include "Core/Scene.h"
+#include "IO/Console.h"
 
 void SceneManager::Init()
 {
@@ -21,12 +22,10 @@ void SceneManager::SaveCurrentScene()
     {
         file << sceneData.dump(4);
         file.close();
-        std::cout << "[SCENE MANAGER] Scene saved in: " << finalPath.string() << std::endl;
+        Console::LogInfo("Scene saved at " + finalPath.string(), LOG_CATEGORY::SCENE);
     }
     else
-    {
-        std::cerr << "[SCENE MANAGER] Error saving scene" << std::endl;
-    }
+        Console::LogError("Error saving scene at " + finalPath.string(), LOG_CATEGORY::SCENE);
 }
 
 void SceneManager::LoadScene(const std::string& filename, bool saveCurrent)
@@ -39,7 +38,7 @@ void SceneManager::LoadScene(const std::string& filename, bool saveCurrent)
 
     if (!fs::exists(targetPath))
     {
-        std::cerr << "[SCENE MANAGER] Can't find " << targetPath.string() << std::endl;
+        Console::LogError("Can't find " + targetPath.string(), LOG_CATEGORY::SCENE);
         return;
     }
 
@@ -58,5 +57,5 @@ void SceneManager::LoadScene(const std::string& filename, bool saveCurrent)
         delete s_activeScene;
 
     s_activeScene = newScene;
-    std::cout << "[SCENE MANAGER] Loaded: " << s_activeScene->GetName() << std::endl;
+    Console::LogInfo("Scene Loaded: " + s_activeScene->GetName(), LOG_CATEGORY::SCENE);
 }

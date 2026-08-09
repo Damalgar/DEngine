@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <filesystem>
+#include "IO/Console.h"
 namespace fs = std::filesystem;
 
 class FileSystem
@@ -40,7 +41,7 @@ class FileSystem
         if (fs::exists(path))
             return path.string();
 
-        std::cerr << "[FILE SYSTEM] Vertex Shader not found: " << path << std::endl; 
+        Console::LogError("Vertex Shader not found: " + path.string(), LOG_CATEGORY::SYSTEM);
         return "";
     }
 
@@ -49,8 +50,8 @@ class FileSystem
         fs::path path = userDir / "ShadersCode" / (filename + ".frag");
         if (fs::exists(path))
             return path.string();
-        
-        std::cerr << "[FILE SYSTEM] Fragment Shader not found: " << path << std::endl; 
+
+        Console::LogError("Fragment Shader not found: " + path.string(), LOG_CATEGORY::SYSTEM);
         return "";
     }
 
@@ -70,7 +71,7 @@ class FileSystem
 
         if (!fs::exists(sourcePath) || !fs::is_regular_file(sourcePath))
         {
-            std::cerr << "[FILESYSTEM] Import error: File doesn't exist: " << sourceFilePath << std::endl;
+            Console::LogError("Import error: File doesn't exist: " + sourceFilePath, LOG_CATEGORY::SYSTEM);
             return false;
         }
 
@@ -89,7 +90,7 @@ class FileSystem
         } 
         catch (const fs::filesystem_error& e) 
         {
-            std::cerr << "[FILESYSTEM] Import error: " << e.what() << std::endl;
+            Console::LogError(std::string("Import error: ") + e.what(), LOG_CATEGORY::SYSTEM);
             return false;
         }
     }

@@ -1,4 +1,4 @@
-#include "IconsLoader.h"
+#include "Icons/IconsLoader.h"
 
 #include <string>
 #include <fstream>
@@ -18,6 +18,9 @@ void IconsLoader::LoadIcons(GLFWwindow* window)
     LoadTextureFromMemory(Gizmos_TranslateIcon_png, Gizmos_TranslateIcon_png_len, &gizmosTranslateIconText);
     LoadTextureFromMemory(Gizmos_RotateIcon_png, Gizmos_RotateIcon_png_len, &gizmosRotateIconText);
     LoadTextureFromMemory(Gizmos_ScaleIcon_png, Gizmos_ScaleIcon_png_len, &gizmosScaleIconText);
+    LoadTextureFromMemory(InfoIcon_png, InfoIcon_png_len, &infoIconText);
+    LoadTextureFromMemory(WarningIcon_png, WarningIcon_png_len, &warningIconText);
+    LoadTextureFromMemory(ErrorIcon_png, ErrorIcon_png_len, &errorIconText);
     //LoadAppIcon(window);
 }
 

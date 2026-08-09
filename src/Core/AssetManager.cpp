@@ -1,4 +1,6 @@
 #include "Core/AssetManager.h"
+#include "Graphics/PrimitiveFactory.h"
+#include "IO/Console.h"
 
 void AssetManager::Init()
 {
@@ -30,8 +32,13 @@ void AssetManager::Init()
 
     LoadAll();
 
-    
     std::string finalPath = materialsFolder.string();
+}
+
+void AssetManager::InitProceduralModels()
+{
+    if (modelsMap.find("Primitive_Cube") == modelsMap.end())
+        modelsMap["Primitive_Cube"] = PrimitiveFactory::CreateCubeModel();
 }
 
 void AssetManager::LoadAll()
@@ -40,6 +47,7 @@ void AssetManager::LoadAll()
     LoadAllTextures();
     LoadAllShaders();
     LoadAllMaterials();
+    InitProceduralModels();
     LoadAllModels();
 }
 
@@ -103,7 +111,7 @@ Texture* AssetManager::GetTexture(const std::string& filename)
 {
     if (texturesMap.find(filename) == texturesMap.end())
     {
-        std::cerr << "[ASSET MANAGER] texture not found: " << filename << std::endl;
+        Console::LogError("texture not found: " + filename, LOG_CATEGORY::ASSETMANAGER);
         return nullptr;
     }
 
@@ -114,7 +122,7 @@ Model* AssetManager::GetModel(const std::string& filename)
 {
     if (modelsMap.find(filename) == modelsMap.end())
     {
-        std::cerr << "[ASSET MANAGER] model not found: " << filename << std::endl;
+        Console::LogError("model not found: " + filename, LOG_CATEGORY::ASSETMANAGER);
         return nullptr;
     }
 
@@ -147,7 +155,7 @@ void AssetManager::LoadModel(const std::string& filename)
         
         if (!found)
         {
-            std::cerr << "[ASSET MANAGER] Model not found: " << filename << " (use .obj, .fbx, .gltf)" << std::endl;
+            Console::LogError("Model not found: " + filename + " (use .obj, .fbx, .gltf)", LOG_CATEGORY::ASSETMANAGER);
             return;
         }
     }
@@ -158,7 +166,7 @@ void AssetManager::LoadModel(const std::string& filename)
     if (loadedModel)
     {
         modelsMap[key] = loadedModel;
-        std::cout << "[ASSET MANAGER] Model loaded: " << key << std::endl;
+        Console::Log("Model loaded: " + key, LOG_LEVEL::INFO, LOG_CATEGORY::ASSETMANAGER);
     }
 }
 
@@ -188,7 +196,7 @@ void AssetManager::LoadTexture(const std::string& filename)
         
         if (!found)
         {
-            std::cerr << "[ASSET MANAGER] Texture not found: " << filename << " (use .png, .jpg, .jpeg)" << std::endl;
+            Console::LogError("Texture not found: " + filename + " (use .png, .jpg, .jpeg)", LOG_CATEGORY::ASSETMANAGER);
             return;
         }
     }
@@ -241,11 +249,11 @@ void AssetManager::CreateNewMaterial(const std::string filename)
     {
         file << matJson.dump(4);
         file.close();
-        std::cout << "[ASSET MANAGER] Created new material" << pathString << std::endl;
+        Console::Log("Created new material" + pathString, LOG_LEVEL::INFO, LOG_CATEGORY::ASSETMANAGER);
     }
     else
     {
-        std::cerr << "[ASSET MANAGER] Can't load " << pathString << std::endl;
+        Console::Log("Can't load" + pathString, LOG_LEVEL::WARNING, LOG_CATEGORY::ASSETMANAGER);
     }
 }
 
@@ -264,14 +272,14 @@ void AssetManager::LoadMaterial(const std::string& filename)
 
     if (!fs::exists(finalPath))
     {
-        std::cerr << "[ASSET MANAGER] Material file not found: " << finalPath.string() << std::endl;
+        Console::Log("Material file not found: " + finalPath.string(), LOG_LEVEL::WARNING, LOG_CATEGORY::ASSETMANAGER);
         return;
     }
 
     std::ifstream file(finalPath);
     if (!file.is_open())
     {
-        std::cerr << "[ASSET MANAGER] Cannot open " << finalPath.string() << std::endl;
+        Console::Log("Cannot open: " + finalPath.string(), LOG_LEVEL::WARNING, LOG_CATEGORY::ASSETMANAGER);
         return;
     }
 
@@ -284,14 +292,14 @@ void AssetManager::LoadMaterial(const std::string& filename)
     newMat->FromJson(j);
 
     materialsMap[key] = newMat;
-    std::cout << "[ASSET MANAGER] Material loaded: " << key << std::endl;
+    Console::Log("Material loaded: " + key, LOG_LEVEL::INFO, LOG_CATEGORY::ASSETMANAGER);
 }
 
 Material* AssetManager::GetMaterial(const std::string& filename)
 {
     if (materialsMap.find(filename) == materialsMap.end())
     {
-        std::cerr << "[ASSET MANAGER] material not found: " << filename << std::endl;
+        Console::LogError("Material not found " + filename, LOG_CATEGORY::ASSETMANAGER);
         return nullptr;
     }
 
@@ -348,10 +356,10 @@ void main()
     fragWorldPos = vec3(modelMatrix * vec4(pos, 1.0));
 })";
         file.close();
-        std::cout << "[ASSET MANAGER] Created new Vertex Shader " << finalPath.string() << std::endl;
+        Console::LogInfo("Created new Vertex Shader " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
     }
     else
-        std::cerr << "[ASSET MANAGER] Cannot create vertex Shader at " << finalPath.string() << std::endl;
+        Console::LogError("Cannot create Vertex Shader at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
 }
 
 void AssetManager::CreateNewFragmentShaderCode(const std::string filename)
@@ -428,10 +436,10 @@ void main()
     FragColor = vec4(finalColor, 1.0);
 })";
         file.close();
-        std::cout << "[ASSET MANAGER] Created new Vertex Shader " << finalPath.string() << std::endl;
+        Console::LogInfo("Created new Fragment Shader " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
     }
     else
-        std::cerr << "[ASSET MANAGER] Cannot create vertex Shader at " << finalPath.string() << std::endl;
+        Console::LogError("Cannot create Fragment Shader at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
 }
 
 void AssetManager::CreateNewShader(const std::string filename)
@@ -465,12 +473,10 @@ void AssetManager::CreateNewShader(const std::string filename)
     {
         file << shaderJson.dump(4);
         file.close();
-        std::cout << "[ASSET MANAGER] Created new shader" << pathString << std::endl;
+        Console::LogInfo("Created new Shader " + pathString, LOG_CATEGORY::ASSETMANAGER);
     }
     else
-    {
-        std::cerr << "[ASSET MANAGER] Can't load " << pathString << std::endl;
-    }
+        Console::LogWarn("Can't load Shader at " + pathString, LOG_CATEGORY::ASSETMANAGER);
 }
 
 void AssetManager::LoadShader(const std::string& filename)
@@ -488,14 +494,14 @@ void AssetManager::LoadShader(const std::string& filename)
 
     if (!fs::exists(finalPath))
     {
-        std::cerr << "[ASSET MANAGER] Shader file not found: " << finalPath.string() << std::endl;
+        Console::LogError("Shader file not found: " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
         return;
     }
 
     std::ifstream file(finalPath);
     if (!file.is_open())
     {
-        std::cerr << "[ASSET MANAGER] Cannot open " << finalPath.string() << std::endl;
+        Console::LogError("Cannot open shader: " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
         return;
     }
 
@@ -508,14 +514,14 @@ void AssetManager::LoadShader(const std::string& filename)
     newShader->FromJson(j);
 
     shadersMap[key] = newShader;
-    std::cout << "[ASSET MANAGER] Shader loaded: " << key << std::endl;
+    Console::LogInfo("Shader loaded " + key, LOG_CATEGORY::ASSETMANAGER);
 }
 
 Shader* AssetManager::GetShader(const std::string& filename)
 {
     if (shadersMap.find(filename) == shadersMap.end())
     {
-        std::cerr << "[ASSET MANAGER] shader not found: " << filename << std::endl;
+        Console::LogError("Shader not found: " + filename, LOG_CATEGORY::ASSETMANAGER);
         return nullptr;
     }
 

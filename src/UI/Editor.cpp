@@ -2,10 +2,12 @@
 #include <Core/Application.h>
 #include "UI/EditorCustomizations.h"
 #include "Core/TagManager.h"
+#include "UI/Panels/UIFileSystem.h"
+#include "UI/Panels/UIConsole.h"
+
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
-
 
 Editor::Editor(GLuint sceneTextureID)
 {
@@ -50,7 +52,7 @@ void Editor::DrawPanels()
         ImGui::DockBuilderDockWindow("Hierarchy", dock_id_left);
         ImGui::DockBuilderDockWindow("Tags", dock_id_left_bottom);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_right);
-        ImGui::DockBuilderDockWindow("Asset Browser", dock_id_bottom);
+        ImGui::DockBuilderDockWindow("Bottom Panel", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Scene", dock_main_id);
 
         ImGui::DockBuilderFinish(dockspace_id);
@@ -73,7 +75,7 @@ void Editor::DrawPanels()
     DrawScenePanel();
 
     ImGui::SetNextWindowClass(&window_class);
-    DrawFileSystemPanel();
+    DrawBottomPanel();
 
     if (m_draggedNodeToMove != nullptr)
     {
@@ -83,7 +85,7 @@ void Editor::DrawPanels()
         m_targetParentNode = nullptr;
     }
 
-    if (m_addObject)
+    if (m_addEmptyObject)
     {
         if (SceneManager::GetActiveScene())
         {
@@ -91,7 +93,19 @@ void Editor::DrawPanels()
             m_addObjectParent = nullptr;
         }
 
-        m_addObject = false;
+        m_addEmptyObject = false;
+        m_addObjectParent = nullptr;
+    }
+
+    if (m_addCubeObject)
+    {
+        if (SceneManager::GetActiveScene())
+        {
+            SceneManager::GetActiveScene()->CreateCubeObject(m_addObjectParent);
+            m_addObjectParent = nullptr;
+        }
+
+        m_addCubeObject = false;
         m_addObjectParent = nullptr;
     }
 
@@ -184,7 +198,13 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
 
         if (ImGui::MenuItem("Add Empty Object"))
         {
-            m_addObject = true;
+            m_addEmptyObject = true;
+            m_addObjectParent = obj;
+        }
+
+        if (ImGui::MenuItem("Add Cube"))
+        {
+            m_addCubeObject = true;
             m_addObjectParent = obj;
         }
 
@@ -209,7 +229,7 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
                 m_draggedNodeToMove = draggedObj;
                 m_targetParentNode = obj;
             } else
-                std::cerr << "[EDITOR] invalid drag" << std::endl;
+                Console::LogWarn("invalid drag", LOG_CATEGORY::SYSTEM);
         }
         ImGui::EndDragDropTarget();
     }
@@ -465,11 +485,19 @@ void Editor::DrawScenePanel()
                 vec3 newTranslation;
                 quat newRotationQuat;
                 vec3 newScale;
-                vec3 skew;
-                vec4 perspective;
 
-                glm::decompose(modelMat, newScale, newRotationQuat, newTranslation, skew, perspective);
-                
+                Transform* parentTransform = m_selectedSceneObj->transform.GetParent();
+
+                if (parentTransform)
+                {
+                    mat4 parentGlobal = parentTransform->GetModelMatrix();
+                    Utils::LocalFromGlobal(modelMat, parentGlobal, newTranslation, newRotationQuat, newScale);
+                } else {
+                    vec3 skew;
+                    vec4 perspective;
+                    glm::decompose(modelMat, newScale, newRotationQuat, newTranslation, skew, perspective);
+                }
+
                 m_selectedSceneObj->transform.SetPosition(newTranslation);
                 m_selectedSceneObj->transform.SetRotation(newRotationQuat);
                 m_selectedSceneObj->transform.SetScale(newScale);
@@ -495,372 +523,36 @@ void Editor::DrawScenePanel()
     ImGui::End();
 }
 
-void Editor::DrawFileSystemPanel()
+void Editor::DrawBottomPanel()
 {
-    ImGui::Begin("Asset Browser");
-    
-    if (ImGui::BeginTabBar("AssetsTabs"))
+    using panel = BOTTOM_PANEL;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::Begin("Bottom Panel");
+    ImGui::PopStyleVar();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+    ImVec2 tabSize = ImVec2(150, 40);
+
+    if (DrawButtonColored("Assets", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::FILESYSTEM, tabSize)
+        && m_bottomPanelActiveType != panel::FILESYSTEM)
+            m_bottomPanelActiveType = panel::FILESYSTEM;
+
+    ImGui::SameLine();
+
+    if (DrawButtonColored("Console", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::CONSOLE, tabSize)
+        && m_bottomPanelActiveType != panel::CONSOLE)
+            m_bottomPanelActiveType = panel::CONSOLE;
+
+    ImGui::PopStyleVar();
+
+    Separator();
+
+    switch (m_bottomPanelActiveType)
     {
-        if (ImGui::BeginTabItem("Models"))
-        {
-            if (DrawButtonColored("+ Import", BUTTON_COLORS::GREY))
-            {
-                std::string path = FsDialog::OpenModelDialog("Select model to import");
-                if (path != "")
-                {
-                    std::string ext = fs::path(path).extension().string();
-                    if (ext == ".obj" || ext == ".fbx")
-                    {
-                        if (FileSystem::ImportAsset(path, "User", "Models"))
-                        {
-                            AssetManager::LoadModel(fs::path(path).filename().stem().string());
-                            NotificationSystem::Show("Model imported");
-                        } else
-                            NotificationSystem::Show("Import error", TOAST_ERROR);
-                    } else {
-                        std::string errorMsg = "Wrong file ext (" + ext + ")";
-                        NotificationSystem::Show(errorMsg.c_str(), TOAST_ERROR);
-                    }
-                } else
-                    NotificationSystem::Show("Empty path", TOAST_WARNING);
-            }
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path modelsPath = fs::path(FileSystem::GetAssetPath("User", "Models"));
-            if (fs::exists(modelsPath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-                ImTextureID iconID = (ImTextureID)(intptr_t)IconsLoader::modelIconText;
-
-                for (const auto& entry : fs::directory_iterator(modelsPath))
-                {
-                    std::string ext = entry.path().extension().string();
-                    if (entry.is_regular_file() && (ext == ".obj" || ext == ".fbx"))
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Model"))
-                            {
-                                Application::Instance->AddModelToScene(filename);
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-
-
-
-        if (ImGui::BeginTabItem("Textures"))
-        {
-            if (DrawButtonColored("+ Import", BUTTON_COLORS::GREY))
-            {
-                std::string path = FsDialog::OpenImageDialog("Select an image to import");
-                if (path != "")
-                {
-                    std::string ext = fs::path(path).extension().string();
-                    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
-                    {
-                        if (FileSystem::ImportAsset(path, "User", "Textures"))
-                        {
-                            AssetManager::LoadTexture(fs::path(path).filename().stem().string());
-                            NotificationSystem::Show("Texture imported");
-                        } else
-                            NotificationSystem::Show("Import error", TOAST_ERROR);
-                    } else {
-                        std::string errorMsg = "Wrong file ext (" + ext + ")";
-                        NotificationSystem::Show(errorMsg.c_str(), TOAST_ERROR);
-                    }
-                } else
-                    NotificationSystem::Show("Empty path", TOAST_WARNING);
-            }
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path modelsPath = fs::path(FileSystem::GetAssetPath("User", "Textures"));
-            if (fs::exists(modelsPath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-                ImTextureID iconID = (ImTextureID)(intptr_t)IconsLoader::textureIconText;
-
-                for (const auto& entry : fs::directory_iterator(modelsPath))
-                {
-                    std::string ext = entry.path().extension().string();
-                    if (entry.is_regular_file() && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Texture"))
-                            {
-                                if (m_selectedSceneObj)
-                                {
-                                    MeshRenderer* renderer = m_selectedSceneObj->GetComponent<MeshRenderer>();
-                                    renderer->GetMaterial()->SetColorMap(AssetManager::GetTexture(entry.path().filename().stem().string()));
-                                }
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Shaders Code"))
-        {
-            if (DrawButtonColored("+ Create Vertex Shader", BUTTON_COLORS::GREY))
-                AssetManager::CreateNewFragmentShaderCode();
-
-            SpacingH(10);
-            ImGui::SameLine();
-
-            if (DrawButtonColored("+ Create Fragment Shader", BUTTON_COLORS::GREY))
-                AssetManager::CreateNewVertexShaderCode();
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path shadersCodePath = fs::path(FileSystem::GetAssetPath("User", "ShadersCode"));
-            if (fs::exists(shadersCodePath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-
-                for (const auto& entry : fs::directory_iterator(shadersCodePath))
-                {
-                    std::string ext = entry.path().extension().string();
-                    if (entry.is_regular_file() && (ext == ".vert" || ext == ".frag"))
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            ImTextureID iconID = ext == ".vert" ? 
-                                (ImTextureID)(intptr_t)IconsLoader::vertexShaderIconText : 
-                                (ImTextureID)(intptr_t)IconsLoader::fragmentShaderIconText;
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Shader"))
-                            {
-                                
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Shaders"))
-        {
-            if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY))
-                AssetManager::CreateNewShader();
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path shadersPath = fs::path(FileSystem::GetAssetPath("User", "Shaders"));
-            if (fs::exists(shadersPath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-                ImTextureID iconID = (ImTextureID)(intptr_t)IconsLoader::shaderIconText;
-
-                for (const auto& entry : fs::directory_iterator(shadersPath))
-                {
-                    if (entry.is_regular_file() && entry.path().extension() == ".shader")
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Shader"))
-                            {
-                                
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-
-
-
-        if (ImGui::BeginTabItem("Materials"))
-        {
-            if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY))
-                AssetManager::CreateNewMaterial();
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path matPath = fs::path(FileSystem::GetAssetPath("User", "Materials"));
-            if (fs::exists(matPath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-                ImTextureID iconID = (ImTextureID)(intptr_t)IconsLoader::materialIconText;
-
-                for (const auto& entry : fs::directory_iterator(matPath))
-                {
-                    if (entry.is_regular_file() && entry.path().extension() == ".mat")
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Material"))
-                            {
-                                if (m_selectedSceneObj)
-                                {
-                                    MeshRenderer* renderer = m_selectedSceneObj->GetComponent<MeshRenderer>();
-                                    renderer->SetSharedMaterial(AssetManager::GetMaterial(filename));
-                                }
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-
-
-        if (ImGui::BeginTabItem("Scenes"))
-        {
-            if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY))
-            {
-
-            }
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path scenesPath = fs::path(FileSystem::GetAssetPath("User", "Scenes"));
-            if (fs::exists(scenesPath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-                ImTextureID iconID = (ImTextureID)(intptr_t)IconsLoader::sceneIconText;
-
-                for (const auto& entry : fs::directory_iterator(scenesPath))
-                {
-                    if (entry.is_regular_file() && entry.path().extension() == ".scene")
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Scene"))
-                            {
-                                SceneManager::LoadScene(entry.path().filename().stem().string());
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
+        case panel::FILESYSTEM: UIFileSystem::Draw(m_selectedSceneObj); break;
+        case panel::CONSOLE: UIConsole::Draw(); break;
     }
+
     ImGui::End();
 }

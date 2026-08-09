@@ -84,7 +84,7 @@ json Transform::ToJson() const
 {
     json j;
     j["position"] = m_position;
-    j["rotation"] = m_eulerAngles;
+    j["rotation"] = m_rotation;
     j["scale"] = m_scale;
     return j;
 }
@@ -92,8 +92,25 @@ json Transform::ToJson() const
 void Transform::FromJson(const json& j)
 {
     m_position = j.contains("position") ? j["position"].get<vec3>() : vec3(0.0f);
-    m_eulerAngles= j.contains("rotation") ? j["rotation"].get<vec3>() : vec3(0.0f);
     m_scale = j.contains("scale") ? j["scale"].get<vec3>() : vec3(1.0f);
+
+    if (j.contains("rotation"))
+    {
+        if (j["rotation"].size() == 4) 
+        {
+            //saved in quaternion
+            m_rotation = j["rotation"].get<quat>();
+            m_eulerAngles = degrees(eulerAngles(m_rotation));
+        } else if (j["rotation"].size() == 3) {
+            //saved in euler angles
+            m_eulerAngles = j["rotation"].get<vec3>();
+            m_rotation = quat(radians(m_eulerAngles));
+        } else {
+            m_rotation = quat(1.0f, 0.0f, 0.0f, 0.0f);
+            m_eulerAngles = vec3(0.0f);
+        }
+    }
+
     m_isDirty = true;
 }
 

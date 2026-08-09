@@ -123,4 +123,19 @@ namespace glm
         v.z = j.at(2).get<float>();
         v.w = j.at(3).get<float>();
     }
+
+    //quaternion to json
+    inline void to_json(nlohmann::json& j, const quat& quaternion)
+    {
+        j = nlohmann::json{quaternion.w, quaternion.x, quaternion.y, quaternion.z};
+    }
+
+    //json to quaternion
+    inline void from_json(const nlohmann::json& j, quat& quaternion)
+    {
+        quaternion.w = j.at(0).get<float>();
+        quaternion.x = j.at(1).get<float>();
+        quaternion.y = j.at(2).get<float>();
+        quaternion.z = j.at(3).get<float>();
+    }
 }

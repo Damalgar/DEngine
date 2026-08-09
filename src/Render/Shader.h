@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "IO/FileSystem.h"
+#include "IO/Console.h"
 #include "Core/ISerializable.h"
 
 using namespace glm;
@@ -139,7 +140,7 @@ struct Shader : public ISerializable{
         if (!success)
         {
             glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-            std::cerr << "[SHADER] error loading vertex shader (" << m_vertexShaderName << "):\n\t" << infoLog << std::endl; 
+            Console::LogWarn("error loading Vertex Shader (" + m_vertexShaderName + "):\n\t" + infoLog);
         }
 
         glCompileShader(fragmentShader);
@@ -147,7 +148,7 @@ struct Shader : public ISerializable{
         if (!success)
         {
             glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-            std::cerr << "[SHADER] error loading fragment shader (" << m_fragmentShaderName << "):\n\t" << infoLog << std::endl; 
+            Console::LogWarn("error loading Fragment Shader (" + m_fragmentShaderName + "):\n\t" + infoLog);
         }
 
         glAttachShader(m_ID, vertexShader);
@@ -158,7 +159,7 @@ struct Shader : public ISerializable{
         if (!success)
         {
             glGetProgramInfoLog(m_ID, 512, nullptr, infoLog);
-            std::cerr << "[SHADER] error linking shader program:\n\t" << infoLog << std::endl; 
+            Console::LogWarn(std::string("error linking shader program:\n\t") + infoLog);
         }
 
         glDeleteShader(vertexShader);
@@ -171,7 +172,7 @@ struct Shader : public ISerializable{
 
         if (!stream.is_open())
         {
-            std::cerr << "[SHADER] file not found " << filepath << std::endl;
+            Console::LogWarn(std::string("file not found ") + filepath);
             return "";
         }
 
