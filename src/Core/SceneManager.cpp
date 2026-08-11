@@ -2,6 +2,7 @@
 #include "IO/FileSystem.h"
 #include "Core/Scene.h"
 #include "IO/Console.h"
+#include "UI/SelectionManager.h"
 
 void SceneManager::Init()
 {
@@ -45,6 +46,7 @@ void SceneManager::LoadScene(const std::string& filename, bool saveCurrent)
     if (s_activeScene && saveCurrent)
         SaveCurrentScene();
 
+    SelectionManager::Deselect();
     std::ifstream file(targetPath);
     json sceneData;
     file >> sceneData;

@@ -361,7 +361,7 @@ inline bool DrawFieldStringPlaceHolder(const char* label, std::string& str, int 
 }
 
 inline bool DrawFieldInt(const char* label, int* variable, int v_min, int v_max, bool returnEdit = false,
-    int warning_treshold = 9999999, std::string warning_title = "", std::string warning_text = "", bool spacing = true) {
+    int warning_treshold = 9999999, std::string warning_title = "", std::string warning_text = "") {
     bool edited = false;
     bool valueChanged = false;
     ImGui::PushID(label);
@@ -396,9 +396,6 @@ inline bool DrawFieldInt(const char* label, int* variable, int v_min, int v_max,
     }
 
     ImGui::PopID();
-
-    if (spacing)
-        ImGui::Spacing();
 
     return returnEdit ? edited : valueChanged;
 }
@@ -484,7 +481,7 @@ inline bool DrawHybridFloat(const char* label, float* variable, float v_min, flo
 }
 
 inline bool DrawFieldFloat2(const char* label, float* v1, float* v2, float v_min, float v_max, bool returnEdit = false, const char* format = "%.1f",
-    float warning_treshold = 9999999, std::string warning_title = "", std::string warning_text = "", bool spacing = true) {
+    float warning_treshold = 9999999, std::string warning_title = "", std::string warning_text = "") {
     
     bool edited = false;
     bool valueChanged = false;
@@ -531,9 +528,6 @@ inline bool DrawFieldFloat2(const char* label, float* v1, float* v2, float v_min
     }
 
     ImGui::PopID();
-
-    if (spacing)
-        ImGui::Spacing();
 
     return returnEdit ? edited : valueChanged;
 }
@@ -782,6 +776,11 @@ inline void TextUnformatted(const char* text, float size = 1)
     ImGui::SetWindowFontScale(size);
     ImGui::TextUnformatted(text);
     ImGui::SetWindowFontScale(1.0f);
+}
+
+inline void TextUnformatted(const std::string& text, float size = 1)
+{
+    TextUnformatted(text.c_str(), size);
 }
 
 inline ImVec4 ColorFromHash(const std::string& name) 
@@ -1100,6 +1099,76 @@ std::function<bool(T)> isExcluded = nullptr, BUTTON_COLORS buttonColor = BUTTON_
     }
 
     return itemSelected;
+}
+
+inline bool DrawAssetSlot(const char* label, const std::string& assetName, ImTextureID iconID) 
+{
+    bool clicked = false;
+    ImGui::PushID(label);
+
+    // 1. Calcolo dello spazio e allineamento (Invertito: Slot 65%, Label 35%)
+    float totalWidth = ImGui::GetContentRegionAvail().x;
+    float labelWidth = totalWidth * 0.35f;
+    float boxWidth = totalWidth - labelWidth;
+    float boxHeight = ImGui::GetFrameHeight(); // Altezza standard ~19px
+
+    // 2. Prepariamo le coordinate per il rettangolo dello slot (a Sinistra)
+    ImVec2 p_min = ImGui::GetCursorScreenPos();
+    ImVec2 p_max = ImVec2(p_min.x + boxWidth, p_min.y + boxHeight);
+
+    // 3. L'Invisible Button: Occupa esattamente lo spazio dello slot
+    ImGui::InvisibleButton("##assetslot", ImVec2(boxWidth, boxHeight));
+    bool isHovered = ImGui::IsItemHovered();
+    clicked = ImGui::IsItemClicked();
+
+    // 4. Disegno Custom tramite ImDrawList
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    
+    ImU32 bgColor = isHovered ? IM_COL32(75, 75, 75, 255) : IM_COL32(42, 42, 42, 255);
+    ImU32 borderColor = IM_COL32(20, 20, 20, 255);
+    float rounding = 3.0f;
+
+    // Disegniamo il background smussato e il bordo
+    drawList->AddRectFilled(p_min, p_max, bgColor, rounding);
+    drawList->AddRect(p_min, p_max, borderColor, rounding);
+
+    // 5. Calcolo coordinate interne per l'Icona
+    float padding = 3.0f;
+    float iconSize = boxHeight - (padding * 2.0f);
+    
+    ImVec2 iconMin = ImVec2(p_min.x + padding, p_min.y + padding);
+    ImVec2 iconMax = ImVec2(iconMin.x + iconSize, iconMin.y + iconSize);
+
+    if (iconID) 
+        drawList->AddImage(iconID, iconMin, iconMax);
+    else 
+        drawList->AddRect(iconMin, iconMax, IM_COL32(100, 100, 100, 255));
+
+    // 6. Calcolo PRECISO del centraggio verticale per il testo
+    std::string displayText = assetName.empty() ? "None (Asset)" : assetName;
+    
+    // Chiediamo a ImGui quanto è alto esattamente il testo con il font attuale
+    ImVec2 textSize = ImGui::CalcTextSize(displayText.c_str());
+    
+    // (Altezza Totale Slot - Altezza Testo) / 2 = Margine Y perfetto
+    float textYOffset = (boxHeight - textSize.y) * 0.5f; 
+    
+    ImVec2 textPos = ImVec2(iconMax.x + padding + 2.0f, p_min.y + textYOffset);
+
+    // 7. Disegniamo il Testo nello slot
+    drawList->PushClipRect(p_min, ImVec2(p_max.x - padding, p_max.y));
+    drawList->AddText(textPos, IM_COL32(220, 220, 220, 255), displayText.c_str());
+    drawList->PopClipRect();
+
+    // 8. Disegniamo l'Etichetta (Label) a Destra
+    ImGui::SameLine();
+    // AlignTextToFramePadding spinge il testo leggermente giù per allinearlo ai bottoni
+    ImGui::AlignTextToFramePadding(); 
+    ImGui::Text("%s", label);
+
+    ImGui::PopID();
+    
+    return clicked;
 }
 
 

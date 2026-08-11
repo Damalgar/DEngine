@@ -64,6 +64,11 @@ class Component : public ISerializable
         m_componentType = j.contains("componentType") ? static_cast<COMPONENT_TYPE>(j["componentType"].get<int>()) : COMPONENT_TYPE::TELEMETRY_VIEWER;
     }
 
+    inline static const std::vector<ComboEntry<COMPONENT_TYPE>> availableComponentsOptions = {
+        { "Mesh Renderer", COMPONENT_TYPE::MESH_RENDERER },
+        { "Telemetry Viewer", COMPONENT_TYPE::TELEMETRY_VIEWER }
+    };
+
     protected:
     std::string m_name = "";
     SceneObject* m_sceneObject = nullptr;

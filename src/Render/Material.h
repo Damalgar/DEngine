@@ -18,8 +18,10 @@ class Material : public ISerializable {
     std::string GetName() const { return m_name; }
 
     void SetColorMap(Texture* texture) { m_colorMap = texture; }
+    void SetSpecularMap(Texture* texture) { m_specularMap = texture; }
     void SetName(const std::string& name) { m_name = name; }
     void SetTintColor(const vec4 tintColor) { m_tintColor = tintColor; }
+    void SetShininess(const float value) { m_shininess = value; }
 
     void Apply();
     json ToJson() const override;

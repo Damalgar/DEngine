@@ -186,7 +186,7 @@ SceneObject* Scene::InstantiateModelNode(Model* model, const ModelNode& node, Sc
 
         renderer->SetMeshIndices(node.meshIndices);
         renderer->SetModel(model);
-        renderer->SetSharedMaterial(AssetManager::GetMaterial("DefaultMaterial"));
+        renderer->SetMaterial(AssetManager::GetMaterial("DefaultMaterial"));
     }
     
     glm::vec3 scale, pos, skew;

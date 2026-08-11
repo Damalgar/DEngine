@@ -2,6 +2,7 @@
 #include "Core/Transform.h"
 #include "Core/SceneObject.h"
 #include "Core/AssetManager.h"
+#include "IO/Console.h"
 
 MeshRenderer::MeshRenderer(SceneObject* sceneObject, Model* model, Material* material) : Component(sceneObject, COMPONENT_TYPE::MESH_RENDERER)
 {
@@ -9,24 +10,7 @@ MeshRenderer::MeshRenderer(SceneObject* sceneObject, Model* model, Material* mat
         return;
 
     SetModel(model);
-    SetSharedMaterial(material);
-}
-
-void MeshRenderer::SetSharedMaterial(Material* material)
-{
-    m_sharedMaterial = material;
-    m_instancedMaterial.reset();
-}
-
-Material* MeshRenderer::GetMaterial()
-{
-    if (!m_instancedMaterial && m_sharedMaterial)
-        m_instancedMaterial = std::make_unique<Material>(m_sharedMaterial->Clone());
-
-    if (m_instancedMaterial)
-        return m_instancedMaterial.get();
-
-    return nullptr;
+    SetMaterial(material);
 }
 
 void MeshRenderer::Draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos)
@@ -34,13 +18,11 @@ void MeshRenderer::Draw(const glm::mat4& viewMatrix, const glm::mat4& projection
     if (!m_model)
         return;
 
-    Material* material = m_instancedMaterial ? m_instancedMaterial.get() : m_sharedMaterial;
-
-    if (!material)
+    if (!m_material)
         return;
 
-    material->Apply();
-    Shader* currentShader = material->GetShader();
+    m_material->Apply();
+    Shader* currentShader = m_material->GetShader();
 
     if (currentShader)
     {
@@ -50,6 +32,19 @@ void MeshRenderer::Draw(const glm::mat4& viewMatrix, const glm::mat4& projection
         currentShader->SetMat4("viewMatrix", viewMatrix);
         currentShader->SetMat4("projectionMatrix", projectionMatrix);
         currentShader->SetVec3("viewPos", viewPos);
+
+        //Overrides, required by specific components (like Telemetry Viewer)
+        for (auto& it : m_materialOverrides)
+        {
+            if (std::holds_alternative<float>(it.second))
+                currentShader->SetFloat(it.first, std::get<float>(it.second));
+            else if (std::holds_alternative<int>(it.second))
+                currentShader->SetInt(it.first, std::get<int>(it.second));
+            else if (std::holds_alternative<vec3>(it.second))
+                currentShader->SetVec3(it.first, std::get<vec3>(it.second));
+            else if (std::holds_alternative<vec4>(it.second))
+                currentShader->SetVec4(it.first, std::get<vec4>(it.second));
+        }
     }
 
     for (unsigned int index : m_meshIndices)
@@ -71,7 +66,7 @@ json MeshRenderer::ToJson() const
 {
     json j = Component::ToJson();
     j["model"] = m_model ? m_model->GetName() : "";
-    j["sharedMaterial"] = m_sharedMaterial ? m_sharedMaterial->GetName() : "";
+    j["material"] = m_material ? m_material->GetName() : "";
     j["meshIndices"] = m_meshIndices;
     return j;
 }
@@ -90,14 +85,14 @@ void MeshRenderer::FromJson(const json& j)
         }
     }
 
-    std::string materialName = j.value("sharedMaterial", "");
+    std::string materialName = j.value("material", "");
     if (!materialName.empty())
     {
-        m_sharedMaterial = AssetManager::GetMaterial(materialName);
-        if (!m_sharedMaterial)
+        m_material = AssetManager::GetMaterial(materialName);
+        if (!m_material)
         {
             AssetManager::LoadMaterial(materialName);
-            m_sharedMaterial = AssetManager::GetMaterial(materialName);
+            m_material = AssetManager::GetMaterial(materialName);
         }
     }
 
@@ -113,13 +108,24 @@ void MeshRenderer::OnGuiDraw()
 
     TextUnformatted(text.c_str());
 
-    
-    text = "Material: ";
     Material* material = GetMaterial();
-    if (material)
-        text += material->GetName();
 
-    TextUnformatted(text.c_str());
+    ImGui::BeginGroup();
+    DrawAssetSlot("Material", material->GetName(), IconsLoader::materialIconText);
+    ImGui::EndGroup();
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MATERIAL_D&D"))
+        {
+            const char* materialFileName = (const char*) payload->Data;
+            Material* newMat = AssetManager::GetMaterial(materialFileName);
+            if (newMat)
+                SetMaterial(newMat);
+            else
+                Console::LogError("Dragged invalid payload", LOG_CATEGORY::ASSETMANAGER);
+        }
+        ImGui::EndDragDropTarget();
+    }
 }
 
 BoundingBox MeshRenderer::GetGlobalBoundingBox()

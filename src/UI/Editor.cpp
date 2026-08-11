@@ -2,8 +2,11 @@
 #include <Core/Application.h>
 #include "UI/EditorCustomizations.h"
 #include "Core/TagManager.h"
+#include "UI/SelectionManager.h"
+
 #include "UI/Panels/UIFileSystem.h"
 #include "UI/Panels/UIConsole.h"
+#include "UI/Panels/UIInspector.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -115,8 +118,8 @@ void Editor::DrawPanels()
         {
             SceneManager::GetActiveScene()->RemoveObject(m_objectToDelete);
 
-            if (m_objectToDelete == m_selectedSceneObj)
-                m_selectedSceneObj = nullptr;
+            if (m_objectToDelete == SelectionManager::GetAsSceneObject())
+                SelectionManager::Deselect();
         }
 
         m_objectToDelete = nullptr;
@@ -124,7 +127,7 @@ void Editor::DrawPanels()
 
     if (m_selectObjectRaycast)
     {
-        m_selectedSceneObj = m_objectToSelectRaycast;
+        SelectionManager::Select(m_objectToSelectRaycast);
         m_selectObjectRaycast = false;
     }
 
@@ -179,7 +182,7 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
 {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-    if (m_selectedSceneObj == obj)
+    if (SelectionManager::GetAsSceneObject() == obj)
         flags |= ImGuiTreeNodeFlags_Selected;
 
     const auto& childTransforms = obj->transform.GetChildren();
@@ -189,7 +192,7 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
     bool nodeOpen = ImGui::TreeNodeEx((void*)obj, flags, "%s", obj->name.c_str());
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-        m_selectedSceneObj = obj;
+        SelectionManager::Select(obj);
 
     if (ImGui::BeginPopupContextItem())
     {
@@ -328,77 +331,7 @@ void Editor::DrawInspectorPanel()
     ImGui::Unindent(10.0f);
     ImGui::Separator();
 
-    if (m_selectedSceneObj == nullptr)
-    {
-        ImGui::End();
-        return;
-    }
-
-    bool active = m_selectedSceneObj->IsActive();
-    ImGui::Checkbox("##ActiveObjectCheckbox", &active);
-
-    ImGui::SameLine();
-
-    char nameBuf[256];
-    strcpy(nameBuf, m_selectedSceneObj->name.c_str());
-    if (ImGui::InputText("##Name", nameBuf, sizeof(nameBuf)))
-        m_selectedSceneObj->name = nameBuf;
-
-    if (active != m_selectedSceneObj->IsActive())
-        m_selectedSceneObj->SetIsActive(active);
-
-    const auto& allTags = TagManager::GetTags();
-    std::string tag = m_selectedSceneObj->GetTag();
-    if (DrawStringCombo("Tag", &tag, allTags, 3))
-    {
-        m_selectedSceneObj->SetTag(tag);
-    }
-
-    Spacing(2);
-    TextUnformatted("Transform");
-    Indent();
-
-    Transform* tr = &m_selectedSceneObj->transform;
-    vec3 pos = tr->GetPosition();
-    vec3 rot = tr->GetEulerAngles();
-    vec3 scale = tr->GetScale();
-
-    if (DrawFloatCoords3("position", &pos.x, 3))
-        tr->SetPosition(pos);
-
-    if (DrawFloatCoords3("rotation", &rot.x, 3, -360.0f, 360.0f))
-        tr->SetRotation(rot);
-
-    if (DrawFloatCoords3("scale", &scale.x, 3, 0.0f))
-        tr->SetScale(scale);
-
-    Unindent();
-
-    Spacing(2);
-
-    const auto& components = m_selectedSceneObj->GetComponents();
-
-    for (const auto& comp : components)
-    {
-        if (ImGui::CollapsingHeader(comp->GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            ImGui::PushID(comp.get());
-            comp->OnGuiDraw();
-            ImGui::PopID();
-        }
-    }
-
-    ImGui::Separator();
-
-
-    COMPONENT_TYPE componentTypeOut;
-    if (DrawElementResearchMenu<COMPONENT_TYPE>("+ Component", componentTypeOut, m_availableComponentsOptions,
-        [&](COMPONENT_TYPE type){return m_selectedSceneObj->HasComponent(type);},
-        BUTTON_COLORS::GREY))
-    {
-        m_selectedSceneObj->AddComponent(componentTypeOut);
-    }
-
+    UIInspector::Draw();
 
     ImGui::End();
 }
@@ -458,15 +391,16 @@ void Editor::DrawScenePanel()
             activeScene->ToggleShowBoundingBoxes();
         isHoveringUI |= ImGui::IsItemHovered();
 
+        SceneObject* selectedSceneObject = SelectionManager::GetAsSceneObject();
         mat4 viewMat = activeScene->GetViewMatrix();
         mat4 projectionMat = activeScene->GetProjectionMatrix();
-        mat4 modelMat = m_selectedSceneObj ? m_selectedSceneObj->transform.GetModelMatrix() : mat4(1.0);
+        mat4 modelMat = selectedSceneObject ? selectedSceneObject->transform.GetModelMatrix() : mat4(1.0);
 
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist();
         ImGuizmo::SetRect(imageTopLeft.x, imageTopLeft.y, imageSize.x, imageSize.y);
 
-        if (m_selectedSceneObj && mainCamera)
+        if (selectedSceneObject && mainCamera)
         {
             ImGuizmo::Manipulate
             (
@@ -486,7 +420,7 @@ void Editor::DrawScenePanel()
                 quat newRotationQuat;
                 vec3 newScale;
 
-                Transform* parentTransform = m_selectedSceneObj->transform.GetParent();
+                Transform* parentTransform = selectedSceneObject->transform.GetParent();
 
                 if (parentTransform)
                 {
@@ -498,9 +432,9 @@ void Editor::DrawScenePanel()
                     glm::decompose(modelMat, newScale, newRotationQuat, newTranslation, skew, perspective);
                 }
 
-                m_selectedSceneObj->transform.SetPosition(newTranslation);
-                m_selectedSceneObj->transform.SetRotation(newRotationQuat);
-                m_selectedSceneObj->transform.SetScale(newScale);
+                selectedSceneObject->transform.SetPosition(newTranslation);
+                selectedSceneObject->transform.SetRotation(newRotationQuat);
+                selectedSceneObject->transform.SetScale(newScale);
             }
         }
 
@@ -550,7 +484,7 @@ void Editor::DrawBottomPanel()
 
     switch (m_bottomPanelActiveType)
     {
-        case panel::FILESYSTEM: UIFileSystem::Draw(m_selectedSceneObj); break;
+        case panel::FILESYSTEM: UIFileSystem::Draw(SelectionManager::GetAsSceneObject()); break;
         case panel::CONSOLE: UIConsole::Draw(); break;
     }
 

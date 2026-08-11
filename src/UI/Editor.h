@@ -27,7 +27,6 @@ class Editor
     GLuint m_sceneTextureID;
     ImVec2 m_viewportSize = ImVec2(1920.0f, 1080.0f);
 
-    SceneObject* m_selectedSceneObj = nullptr;
     SceneObject* m_objectToDelete = nullptr;
     
     bool m_addEmptyObject = false;
@@ -51,9 +50,4 @@ class Editor
     void DrawInspectorPanel();
     void DrawHierarchyNode(SceneObject* obj);
     void DrawTagsPanel();
-
-    inline static const std::vector<ComboEntry<COMPONENT_TYPE>> m_availableComponentsOptions = {
-        { "Mesh Renderer", COMPONENT_TYPE::MESH_RENDERER },
-        { "Telemetry Viewer", COMPONENT_TYPE::TELEMETRY_VIEWER }
-    };
 };

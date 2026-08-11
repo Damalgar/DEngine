@@ -110,10 +110,12 @@ set(SOURCES
 
     #===UI===
     src/UI/Editor.cpp
+    src/UI/SelectionManager.cpp
     
     #===UI/PANELS===
     src/UI/Panels/UIFileSystem.cpp
     src/UI/Panels/UIConsole.cpp
+    src/UI/Panels/UIInspector.cpp
 
     #===ICONS===
     src/Icons/IconsLoader.cpp

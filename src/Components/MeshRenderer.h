@@ -2,6 +2,9 @@
 #include "Components/Component.h"
 #include "Render/Material.h"
 #include "Render/Model.h"
+#include <variant>
+
+using UniformValue = std::variant<float, int, vec3, vec4>;
 
 class MeshRenderer : public Component {
     public:
@@ -14,10 +17,8 @@ class MeshRenderer : public Component {
     Model* GetModel() const { return m_model; }
     void SetMeshIndices(const std::vector<unsigned int>& indices) { m_meshIndices = indices; }
 
-    Material* GetSharedMaterial() { return m_sharedMaterial; }
-    void SetSharedMaterial(Material* material);
-
-    Material* GetMaterial();
+    Material* GetMaterial() const { return m_material; }
+    void SetMaterial(Material* material) { m_material = material; };
 
     json ToJson() const override;
     void FromJson(const json& j) override;
@@ -26,10 +27,18 @@ class MeshRenderer : public Component {
     
     BoundingBox GetGlobalBoundingBox();
 
+    void SetFloatOverride(const std::string& name, float value) { m_materialOverrides[name] = value; }
+    void SetIntOverride(const std::string& name, int value) { m_materialOverrides[name] = value; }
+    void SetVec3Override(const std::string& name, const vec3& value) { m_materialOverrides[name] = value; }
+    void SetVec4Override(const std::string& name, const vec4& value) { m_materialOverrides[name] = value; }
+
+    void ClearOverride(const std::string& name) { m_materialOverrides.erase(name); }
+    void ClearAllOverrides() { m_materialOverrides.clear(); }
+
     private:
     Model* m_model;
     std::vector<unsigned int> m_meshIndices;
 
-    Material* m_sharedMaterial = nullptr;
-    std::unique_ptr<Material> m_instancedMaterial = nullptr;
+    Material* m_material = nullptr;
+    std::unordered_map<std::string, UniformValue> m_materialOverrides;
 };

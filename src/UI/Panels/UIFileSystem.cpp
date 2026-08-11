@@ -7,6 +7,7 @@
 #include "IO/FileSystem.h"
 #include "Core/AssetManager.h"
 #include "Fonts/FontsLoader.h"
+#include "UI/SelectionManager.h"
 
 #include "UI/EditorCustomizations.h"
 
@@ -139,14 +140,19 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
                                     BUTTON_COLORS::NONE, "Texture"))
                             {
-                                if (m_selectedSceneObj)
-                                {
-                                    MeshRenderer* renderer = m_selectedSceneObj->GetComponent<MeshRenderer>();
-                                    renderer->GetMaterial()->SetColorMap(AssetManager::GetTexture(entry.path().filename().stem().string()));
-                                }
+                                SelectionManager::Select(AssetManager::GetTexture(filename));
                             }
+
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
+
+                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                        {
+                            ImGui::SetDragDropPayload("TEXTURE_D&D", filename.c_str(), filename.size() + 1);
+                            TextUnformatted(filename);
+                            ImGui::EndDragDropSource();
+                        }
+                        
                         currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
                         if (currentX + fileSystemPref.cellSize > availableWidth)
                             currentX = 0;
@@ -267,8 +273,6 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
             ImGui::EndTabItem();
         }
 
-
-
         if (ImGui::BeginTabItem("Materials"))
         {
             if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY))
@@ -301,14 +305,18 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
                                     BUTTON_COLORS::NONE, "Material"))
                             {
-                                if (m_selectedSceneObj)
-                                {
-                                    MeshRenderer* renderer = m_selectedSceneObj->GetComponent<MeshRenderer>();
-                                    renderer->SetSharedMaterial(AssetManager::GetMaterial(filename));
-                                }
+                                SelectionManager::Select(AssetManager::GetMaterial(filename));
                             }
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
+
+                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                        {
+                            ImGui::SetDragDropPayload("MATERIAL_D&D", filename.c_str(), filename.size() + 1);
+                            TextUnformatted(filename);
+                            ImGui::EndDragDropSource();
+                        }
+
                         currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
                         if (currentX + fileSystemPref.cellSize > availableWidth)
                             currentX = 0;

@@ -22,7 +22,7 @@ void TelemetryViewer::Update()
         case TELEMETRY_MODE::THRESHOLD: tintColor = GetTintColorThresholdMode(); break;
     }
 
-    mat->SetTintColor(tintColor);
+    renderer->SetVec4Override("material.tintColor", tintColor);
 }
 
 vec4 TelemetryViewer::GetTintColorRangeMode()
