@@ -1,4 +1,0 @@
-{
-    "fragmentShader": "DefaultFragment",
-    "vertexShader": "DefaultVertex"
-}

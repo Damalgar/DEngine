@@ -2,9 +2,15 @@
 #include "Core/SceneObject.h"
 #include "Components/MeshRenderer.h"
 #include "Utils/Utils.h"
+#include "Core/TelemetryManager.h"
 
 void TelemetryViewer::Update()
 {
+    if (m_targetParameter.empty()) 
+        return;
+
+    m_currentValue = TelemetryManager::GetValue(m_targetParameter);
+
     MeshRenderer* renderer = m_sceneObject->GetComponent<MeshRenderer>();
     if (!renderer)
         return;
@@ -28,21 +34,22 @@ void TelemetryViewer::Update()
 vec4 TelemetryViewer::GetTintColorRangeMode()
 {
     float range = m_rangeValueEnd - m_rangeValueStart;
-    float interpValue = (m_simulatedValue - m_rangeValueStart) / range;
+    if (range == 0.0f) return m_rangeColorStart;
+    float interpValue = (m_currentValue - m_rangeValueStart) / range;
     interpValue = std::clamp(interpValue, 0.0f, 1.0f);
     return mix(m_rangeColorStart, m_rangeColorEnd, interpValue);
 }
 
 vec4 TelemetryViewer::GetTintColorThresholdMode()
 {
-    if (m_simulatedValue >= m_thresholdValue)
+    if (m_currentValue >= m_thresholdValue)
         return m_thresholdColorAfter;
     return m_thresholdColorBefore;
 }
 
 vec4 TelemetryViewer::GetTintColorSwitchMode()
 {
-    if (m_simulatedValue > 0.0f)
+    if (m_currentValue > 0.0f)
         return m_switchColorOn;
     return m_switchColorOff;
 }
@@ -50,9 +57,64 @@ vec4 TelemetryViewer::GetTintColorSwitchMode()
 void TelemetryViewer::OnGuiDraw()
 {
     DrawEnumCombo("", &m_telemetryMode, TelemetryModesOptions, 1);
-    Spacing(2);
-    DrawHybridFloat("valore simulato", &m_simulatedValue, 0, 200, "%.1f");
-    Spacing(2);
+
+    static ImGuiTextFilter parameterFilter;
+
+    const auto& validParams = TelemetryManager::GetValidParameters();
+    const auto& invalidParams = TelemetryManager::GetInvalidParameters();
+
+    std::string previewText = m_targetParameter.empty() ? "No parameter" : m_targetParameter;
+
+    if (ImGui::BeginCombo("parameter", previewText.c_str()))
+    {
+        parameterFilter.Draw("Search##param");
+        ImGui::Separator();
+
+        bool drewValid = false;
+        for (const std::string& param : validParams)
+        {
+            if (!parameterFilter.PassFilter(param.c_str()))
+                continue;
+
+            drewValid = true;
+            bool isSelected = (m_targetParameter == param);
+            
+            if (ImGui::Selectable(param.c_str(), isSelected))
+                m_targetParameter = param;
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        bool hasInvalidMatches = false;
+        for (const std::string& param : invalidParams)
+        {
+            if (parameterFilter.PassFilter(param.c_str()))
+            {
+                hasInvalidMatches = true;
+                break;
+            }
+        }
+
+        if (hasInvalidMatches)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+            for (const std::string& param : invalidParams)
+            {
+                if (parameterFilter.PassFilter(param.c_str()))
+                    TextUnformatted(param.c_str()); 
+            }
+            ImGui::PopStyleColor();
+        }
+        
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::IsItemDeactivated())
+        parameterFilter.Clear();
+
+    if (!m_targetParameter.empty())
+        ImGui::TextDisabled("Current value (Frame %d): %.2f", TelemetryManager::GetCurrentFrame(), m_currentValue);
 
     switch (m_telemetryMode)
     {
@@ -98,7 +160,6 @@ json TelemetryViewer::ToJson() const
     json j = Component::ToJson();
 
     j["telemetryMode"] = static_cast<int>(m_telemetryMode);
-    j["simulatedValue"] = m_simulatedValue;
 
     j["rangeValueStart"] = m_rangeValueStart;
     j["rangeValueEnd"] = m_rangeValueEnd;
@@ -117,7 +178,6 @@ json TelemetryViewer::ToJson() const
 void TelemetryViewer::FromJson(const json& j)
 {
     m_telemetryMode = static_cast<TELEMETRY_MODE>(j.value("telemetryMode", 0));
-    m_simulatedValue = j.value("simulatedValue", 0.0f);
 
     m_rangeValueStart = j.value("rangeValueStart", 0.0f);
     m_rangeValueEnd = j.value("rangeValueEnd", 100.0f);

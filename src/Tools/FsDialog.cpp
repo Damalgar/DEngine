@@ -60,5 +60,9 @@ namespace FsDialog {
 
     std::string OpenImageDialog(const char* title) {
         return OpenFileDialog(title, {"*.png", "*.jpg", "*.jpeg"}, "Image files (*.png, *.jpg, *.jpeg)");
-    }    
+    }
+
+    std::string OpenCSVDialog(const char* title) {
+        return OpenFileDialog(title, {"*.csv"}, "CSV file (*.csv)");
+    }
 }

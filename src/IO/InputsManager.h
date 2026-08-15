@@ -13,6 +13,8 @@ class InputsManager {
     static bool IsMouseButtonPressed(ImGuiMouseButton button);
     static bool IsMouseButtonReleased(ImGuiMouseButton button);
 
+    static float MouseWheelScroll();
+
     static glm::vec2 GetMouseDelta();
     static void SetCursorLocked(bool locked);
 

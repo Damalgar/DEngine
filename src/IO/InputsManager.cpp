@@ -49,3 +49,8 @@ bool InputsManager::IsMouseButtonReleased(ImGuiMouseButton button)
 {
     return ImGui::IsMouseReleased(button);
 }
+
+float InputsManager::MouseWheelScroll()
+{
+    return ImGui::GetIO().MouseWheel;
+}

@@ -14,3 +14,17 @@ struct ScenePref
     ImVec2 buttonSize = ImVec2(75, 75);
 };
 inline ScenePref scenePref;
+
+struct TimelinePref
+{
+    float timelineSliderHeigth = 50;
+    float timelineMargin = 20;
+    ImU32 timelineSliderColor = IM_COL32(30, 30, 30, 255);
+    
+    float playheadThickness = 2;
+    ImU32 playheadColor = IM_COL32(255, 255, 255, 255);
+
+    float zoomSpeed = 0.15f;
+    int rulerTicks = 10;
+};
+inline TimelinePref timelinePref;

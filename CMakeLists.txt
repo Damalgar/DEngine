@@ -82,10 +82,12 @@ set(SOURCES
     src/Core/AssimpImportManager.cpp
     src/Core/Transform.cpp
     src/Core/TagManager.cpp
+    src/Core/TelemetryManager.cpp
 
     #===IO===
     src/IO/InputsManager.cpp
     src/IO/Console.cpp
+    src/IO/TelemetryParser.cpp
 
     #===GRAPHICS===
     src/Graphics/Camera.cpp
@@ -116,6 +118,7 @@ set(SOURCES
     src/UI/Panels/UIFileSystem.cpp
     src/UI/Panels/UIConsole.cpp
     src/UI/Panels/UIInspector.cpp
+    src/UI/Panels/UITimeline.cpp
 
     #===ICONS===
     src/Icons/IconsLoader.cpp

@@ -3,10 +3,12 @@
 #include "UI/EditorCustomizations.h"
 #include "Core/TagManager.h"
 #include "UI/SelectionManager.h"
+#include "Core/TelemetryManager.h"
 
 #include "UI/Panels/UIFileSystem.h"
 #include "UI/Panels/UIConsole.h"
 #include "UI/Panels/UIInspector.h"
+#include "UI/Panels/UITimeline.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -33,7 +35,9 @@ void Editor::DrawPanels()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
     ImGui::Begin("DEngine DockSpace", nullptr, window_flags);
-    ImGui::PopStyleVar(3); 
+    ImGui::PopStyleVar(3);
+
+    DrawMenuBar();
 
     ImGuiID dockspace_id = ImGui::GetID("MyEditorDockspace");
 
@@ -133,6 +137,40 @@ void Editor::DrawPanels()
 
 
     ImGui::End();
+}
+
+void Editor::DrawMenuBar()
+{
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Load CSV"))
+            {
+                fs::path path = FsDialog::OpenCSVDialog();
+                if (path.string() != "")
+                {
+                    if (path.extension().string() == ".csv")
+                    {
+                        if (TelemetryManager::LoadFromCSV(path.string()))
+                        {
+                            NotificationSystem::Show("CSV Loaded");
+                            UITimeline::SetStartFrame(1);
+                            UITimeline::SetEndFrame(TelemetryManager::GetMaxFrames());
+                        }
+                        else
+                            NotificationSystem::Show("Error loading CSV", TOAST_ERROR);
+                    } else
+                        NotificationSystem::Show("Not a CSV file", TOAST_ERROR);
+                } else
+                    NotificationSystem::Show("Error opening CSV", TOAST_ERROR);
+            }
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMenuBar();
+    }
 }
 
 void Editor::DrawHierarchyPanel()
@@ -465,6 +503,8 @@ void Editor::DrawBottomPanel()
     ImGui::Begin("Bottom Panel");
     ImGui::PopStyleVar();
 
+    float spacing = 5.0f;
+
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
     ImVec2 tabSize = ImVec2(150, 40);
 
@@ -472,11 +512,24 @@ void Editor::DrawBottomPanel()
         && m_bottomPanelActiveType != panel::FILESYSTEM)
             m_bottomPanelActiveType = panel::FILESYSTEM;
 
+    SpacingH(spacing);
     ImGui::SameLine();
-
     if (DrawButtonColored("Console", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::CONSOLE, tabSize)
         && m_bottomPanelActiveType != panel::CONSOLE)
             m_bottomPanelActiveType = panel::CONSOLE;
+
+    SpacingH(spacing);
+    ImGui::SameLine();
+    bool showTimeline = TelemetryManager::IsCsvLoaded();
+    if (!showTimeline)
+        ImGui::BeginDisabled();
+        
+    if (DrawButtonColored("Timeline", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::TIMELINE, tabSize)
+        && m_bottomPanelActiveType != panel::TIMELINE)
+            m_bottomPanelActiveType = panel::TIMELINE;
+
+    if (!showTimeline)
+        ImGui::EndDisabled();
 
     ImGui::PopStyleVar();
 
@@ -486,6 +539,7 @@ void Editor::DrawBottomPanel()
     {
         case panel::FILESYSTEM: UIFileSystem::Draw(SelectionManager::GetAsSceneObject()); break;
         case panel::CONSOLE: UIConsole::Draw(); break;
+        case panel::TIMELINE: UITimeline::Draw(); break;
     }
 
     ImGui::End();

@@ -12,7 +12,8 @@
 enum class BOTTOM_PANEL
 {
     FILESYSTEM = 0,
-    CONSOLE
+    CONSOLE,
+    TIMELINE
 };
 
 class Editor
@@ -50,4 +51,5 @@ class Editor
     void DrawInspectorPanel();
     void DrawHierarchyNode(SceneObject* obj);
     void DrawTagsPanel();
+    void DrawMenuBar();
 };

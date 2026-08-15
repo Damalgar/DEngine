@@ -17,12 +17,15 @@ class TelemetryViewer : public Component {
     void Update() override;
     void OnGuiDraw() override;
 
+    std::string GetTargetParameter() const { return m_targetParameter; }
+    void SetTargetParameter(const std::string& parameter) { m_targetParameter = parameter; }
+
     json ToJson() const override;
     void FromJson(const json& j) override;
 
     private:
     TELEMETRY_MODE m_telemetryMode = TELEMETRY_MODE::RANGE;
-    std::string m_selectedChannel;
+    std::string m_targetParameter;
 
     //Range mode
     vec4 m_rangeColorStart = vec4(0.0f, 0.0f, 0.7f, 1.0f);
@@ -39,7 +42,7 @@ class TelemetryViewer : public Component {
     vec4 m_switchColorOff = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     vec4 m_switchColorOn = vec4(0.0f, 0.8f, 0.0f, 1.0f);
 
-    float m_simulatedValue = 0;
+    float m_currentValue = 0.0f;
 
     vec4 GetTintColorRangeMode();
     vec4 GetTintColorThresholdMode();

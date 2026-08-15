@@ -14,4 +14,5 @@ namespace FsDialog {
     std::string OpenFolderDialog(const char* title = "Select a destination folder");
     std::string OpenModelDialog(const char* title = "Select a model (.obj, .fbx)");
     std::string OpenImageDialog(const char* title = "Select an image (.png, .jpg, .jpeg)");
+    std::string OpenCSVDialog(const char* title = "Select a CSV file (.csv)");
 }
