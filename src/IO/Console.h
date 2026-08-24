@@ -13,7 +13,8 @@ enum class LOG_CATEGORY {
     DEFAULT = 0,
     ASSETMANAGER,
     SCENE,
-    SYSTEM
+    SYSTEM,
+    TELEMETRY
 };
 
 struct LogMessage {

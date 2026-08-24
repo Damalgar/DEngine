@@ -6,7 +6,7 @@
 
 void TelemetryViewer::Update()
 {
-    if (m_targetParameter.empty()) 
+    if (m_targetParameter.empty() || m_targetParameter == "") 
         return;
 
     m_currentValue = TelemetryManager::GetValue(m_targetParameter);
@@ -28,7 +28,10 @@ void TelemetryViewer::Update()
         case TELEMETRY_MODE::THRESHOLD: tintColor = GetTintColorThresholdMode(); break;
     }
 
-    renderer->SetVec4Override("material.tintColor", tintColor);
+    if (std::isnan(m_currentValue))
+        renderer->ClearOverride("material.tintColor");
+    else
+        renderer->SetVec4Override("material.tintColor", tintColor);
 }
 
 vec4 TelemetryViewer::GetTintColorRangeMode()
@@ -122,6 +125,21 @@ void TelemetryViewer::OnGuiDraw()
         case TELEMETRY_MODE::SWITCH: OnGuiDrawSwitchMode(); break;
         case TELEMETRY_MODE::THRESHOLD: OnGuiDrawThresholdMode(); break;
     }
+
+    if(!m_targetParameter.empty() && m_telemetryMode != TELEMETRY_MODE::SWITCH && DrawButtonColored("Auto-Range", BUTTON_COLORS::UTILITY))
+        SetSuggestedValues();
+}
+
+void TelemetryViewer::SetSuggestedValues()
+{
+    std::vector<float> suggestedValues = TelemetryManager::GetSuggestedRange(m_targetParameter);
+    if (suggestedValues.empty())
+        return;
+
+    m_rangeValueStart = suggestedValues[0];
+    m_rangeValueEnd = suggestedValues[1];
+    
+    m_thresholdValue = suggestedValues[2];
 }
 
 void TelemetryViewer::OnGuiDrawRangeMode()

@@ -29,7 +29,7 @@ TelemetryData TelemetryParser::LoadCSV(const std::string& filepath)
         }
     }
 
-    std::vector<float> lastValidValues(result.orderedNames.size(), -1);
+    std::vector<float> lastValidValues(result.orderedNames.size(), std::numeric_limits<float>::quiet_NaN());
     std::vector<bool> hasValidValue(result.orderedNames.size(), false);
     
     while (std::getline(file, line))

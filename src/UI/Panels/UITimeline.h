@@ -1,4 +1,5 @@
 #pragma once
+#include "Vendor/imgui/imgui.h"
 
 class UITimeline {
     public:
@@ -12,4 +13,6 @@ class UITimeline {
     inline static int m_viewEndFrame = 1;
     inline static bool m_isPanning = false;
     inline static float m_panAccumulator = 0;
+
+    static void DrawGraph(ImVec2 size);
 };

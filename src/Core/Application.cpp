@@ -4,7 +4,8 @@
 #include "Core/SceneManager.h"
 #include "Core/TagManager.h"
 #include "Vendor/imgui/ImGuizmo.h"
-
+#include "Vendor/imgui/implot.h"
+#include "Core/TelemetryManager.h"
 
 Application::Application()
 {
@@ -38,6 +39,7 @@ int Application::Init(int argc, char* argv0)
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 

@@ -17,9 +17,13 @@ class TelemetryManager {
     static void Update();
 
     static float GetValue(const std::string& parameter);
+    static const std::vector<float>& GetValues(const std::string& parameter);
     static const std::vector<std::string>& GetParameters() { return m_parametersNames; }
     static const std::vector<std::string>& GetValidParameters() { return m_validParameters; }
     static const std::vector<std::string>& GetInvalidParameters() { return m_invalidParameters; }
+
+    //rangeMin, rangeMax, threshold
+    static std::vector<float> GetSuggestedRange(const std::string& parameter);
 
     static bool IsCsvLoaded() { return m_isCsvLoaded; }
 

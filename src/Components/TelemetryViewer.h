@@ -23,6 +23,8 @@ class TelemetryViewer : public Component {
     json ToJson() const override;
     void FromJson(const json& j) override;
 
+    void SetSuggestedValues();
+
     private:
     TELEMETRY_MODE m_telemetryMode = TELEMETRY_MODE::RANGE;
     std::string m_targetParameter;

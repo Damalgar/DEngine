@@ -28,6 +28,7 @@ std::string Console::GetCategoryString(LOG_CATEGORY category)
         case cat::ASSETMANAGER: return "[ASSET MANAGER]";
         case cat::SCENE: return "[SCENE]";
         case cat::SYSTEM: return "[SYSTEM]";
+        case cat::TELEMETRY: return "[TELEMETRY]";
         default: return "[INFO]";
     }
 }

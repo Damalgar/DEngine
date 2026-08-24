@@ -31,6 +31,9 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
     ${IMGUI_DIR}/ImGuizmo.cpp
+    ${IMGUI_DIR}/implot_demo.cpp
+    ${IMGUI_DIR}/implot.cpp
+    ${IMGUI_DIR}/implot_items.cpp
 )
 
 include_directories(
