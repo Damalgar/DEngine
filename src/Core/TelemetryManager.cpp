@@ -70,6 +70,9 @@ void TelemetryManager::Update()
 
 float TelemetryManager::GetValue(const std::string& parameter)
 {
+    if (parameter == "")
+        return std::numeric_limits<float>::quiet_NaN();
+
     auto it = m_telemetryMap.find(parameter);
     if (it == m_telemetryMap.end())
     {
@@ -93,7 +96,8 @@ const std::vector<float>& TelemetryManager::GetValues(const std::string& paramet
     if (it == m_telemetryMap.end())
     {
         Console::LogError("parameter " + parameter + " not valid", LOG_CATEGORY::TELEMETRY);
-        return {};
+        static const std::vector<float> emptyVec;
+        return emptyVec;
     }
 
     const std::vector<float>& values = it->second;

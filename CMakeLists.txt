@@ -6,13 +6,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-    add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 endif()
+
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(src/Vendor/GLFW)
 
 if(MSVC)
     string(REPLACE "/W3" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -59,19 +65,6 @@ include_directories(
 )
 
 find_package(OpenGL REQUIRED)
-
-if(WIN32)
-    set(GLFW_DIR "${CMAKE_SOURCE_DIR}/src/Vendor/GLFW")
-    include_directories(${GLFW_DIR}/include)
-    link_directories(${GLFW_DIR}/lib-vc2022)
-endif()
-
-if(UNIX AND NOT APPLE)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GLFW REQUIRED glfw3)
-    include_directories(${GLFW_INCLUDE_DIRS})
-    link_directories(${GLFW_LIBRARY_DIRS})
-endif()
 
 set(SOURCES 
     src/main.cpp
@@ -142,7 +135,7 @@ if(WIN32)
         WIN32
         ${SOURCES}
     )
-    target_link_libraries(DEngine PRIVATE glfw3 opengl32 gdi32 shell32 comdlg32 ole32 assimp)
+    target_link_libraries(DEngine PRIVATE glfw opengl32 gdi32 shell32 comdlg32 ole32 assimp)
     target_include_directories(DEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Vendor/glm)
     if(MSVC)
         set_target_properties(DEngine PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
@@ -152,5 +145,5 @@ elseif(UNIX AND NOT APPLE)
     add_executable(DEngine 
     ${SOURCES}
     )
-    target_link_libraries(DEngine PRIVATE ${GLFW_LIBRARIES} OpenGL::GL dl pthread assimp)
+    target_link_libraries(DEngine PRIVATE glfw OpenGL::GL dl pthread assimp)
 endif()
