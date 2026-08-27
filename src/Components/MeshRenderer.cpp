@@ -3,6 +3,7 @@
 #include "Core/SceneObject.h"
 #include "Core/AssetManager.h"
 #include "IO/Console.h"
+#include "Render/Material.h"
 
 MeshRenderer::MeshRenderer(SceneObject* sceneObject, Model* model, Material* material) : Component(sceneObject, COMPONENT_TYPE::MESH_RENDERER)
 {
@@ -61,7 +62,6 @@ void MeshRenderer::Draw(const glm::mat4& viewMatrix, const glm::mat4& projection
     }
 }
 
-//TODO: ToJson e FromJson
 json MeshRenderer::ToJson() const
 {
     json j = Component::ToJson();

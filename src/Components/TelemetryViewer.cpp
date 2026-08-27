@@ -172,13 +172,13 @@ void TelemetryViewer::OnGuiDrawThresholdMode()
     ImGui::ColorEdit4("After", &m_thresholdColorAfter.x, ImGuiColorEditFlags_NoInputs);
 }
 
-//TODO: ToJson e FromJson
 json TelemetryViewer::ToJson() const
 {
     json j = Component::ToJson();
 
     j["telemetryMode"] = static_cast<int>(m_telemetryMode);
-
+    j["targetParameter"] = m_targetParameter;
+    
     j["rangeValueStart"] = m_rangeValueStart;
     j["rangeValueEnd"] = m_rangeValueEnd;
     j["rangeColorStart"] = m_rangeColorStart;
@@ -196,6 +196,7 @@ json TelemetryViewer::ToJson() const
 void TelemetryViewer::FromJson(const json& j)
 {
     m_telemetryMode = static_cast<TELEMETRY_MODE>(j.value("telemetryMode", 0));
+    m_targetParameter = j.contains("targetParameter") ? j["targetParameter"].get<std::string>() : "";
 
     m_rangeValueStart = j.value("rangeValueStart", 0.0f);
     m_rangeValueEnd = j.value("rangeValueEnd", 100.0f);

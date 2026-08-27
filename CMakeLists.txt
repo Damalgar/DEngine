@@ -18,6 +18,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
 add_subdirectory(src/Vendor/GLFW)
 
 if(MSVC)
@@ -40,6 +41,7 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/implot_demo.cpp
     ${IMGUI_DIR}/implot.cpp
     ${IMGUI_DIR}/implot_items.cpp
+    ${IMGUI_DIR}/TextEditor.cpp
 )
 
 include_directories(

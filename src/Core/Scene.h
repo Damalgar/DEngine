@@ -5,6 +5,7 @@
 #include "Core/SceneObject.h"
 #include "Core/ISerializable.h"
 #include "Core/AssetManager.h"
+#include "Render/Model.h"
 
 class Scene : public ISerializable {
     public:

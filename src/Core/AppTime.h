@@ -6,7 +6,7 @@ class AppTime {
 
     static void Update()
     {
-        m_deltaTime += ImGui::GetIO().DeltaTime;
+        m_deltaTime = ImGui::GetIO().DeltaTime;
         m_time += m_deltaTime;
     }
 

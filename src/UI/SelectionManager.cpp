@@ -49,6 +49,18 @@ void SelectionManager::Select(Texture* text)
     m_data = text;
 }
 
+void SelectionManager::Select(Shader* shader)
+{
+    if (!shader)
+    {
+        Deselect();
+        return;
+    }
+
+    m_selectedType = type::SHADER;
+    m_data = shader;
+}
+
 SceneObject* SelectionManager::GetAsSceneObject()
 {
     if (m_selectedType != type::SCENE_OBJECT)
@@ -71,4 +83,12 @@ Texture* SelectionManager::GetAsTexture()
         return nullptr;
 
     return static_cast<Texture*>(m_data);
+}
+
+Shader* SelectionManager::GetAsShader()
+{
+    if (m_selectedType != type::SHADER)
+        return nullptr;
+
+    return static_cast<Shader*>(m_data);
 }

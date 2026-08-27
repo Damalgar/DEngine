@@ -22,6 +22,7 @@ class Material : public ISerializable {
     void SetName(const std::string& name) { m_name = name; }
     void SetTintColor(const vec4 tintColor) { m_tintColor = tintColor; }
     void SetShininess(const float value) { m_shininess = value; }
+    void SetShader(Shader* shader) { m_shader = shader; }
 
     void Apply();
     json ToJson() const override;

@@ -306,7 +306,6 @@ void Editor::DrawTagsPanel()
     std::vector<std::string> uniqueTags;
     const std::vector<SceneObject*> sceneObjects = Application::Instance->GetSceneObjects();
 
-    //TODO: tags
     static char newTagBuf[64] = "";
     ImGui::InputText("##NewTag", newTagBuf, sizeof(newTagBuf));
     ImGui::SameLine();

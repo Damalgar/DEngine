@@ -8,6 +8,13 @@
 #include "Components/Component.h"
 #include "Core/AssetManager.h"
 #include "IO/Console.h"
+#include "Vendor/imgui/TextEditor.h"
+#include <fstream>
+#include <sstream>
+
+#include "Render/Material.h"
+#include "Render/Shader.h"
+#include "Render/Texture.h"
 
 void UIInspector::Draw()
 {
@@ -19,6 +26,88 @@ void UIInspector::Draw()
     {
         case type::SCENE_OBJECT: DrawSceneObject(); break;
         case type::MATERIAL: DrawMaterial(); break;
+        case type::SHADER: DrawShader(); break;
+    }
+}
+
+void UIInspector::DrawShader()
+{
+    static TextEditor vertexEditor;
+    static TextEditor fragmentEditor;
+    static bool editorsInitialized = false;
+    static Shader* currentlyEditingShader = nullptr; 
+
+    if (!editorsInitialized)
+    {
+        vertexEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+        vertexEditor.SetPalette(TextEditor::GetDarkPalette());
+        
+        fragmentEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+        fragmentEditor.SetPalette(TextEditor::GetDarkPalette());
+        
+        editorsInitialized = true;
+    }
+
+    Shader* shader = SelectionManager::GetAsShader();
+    if (shader == nullptr)
+    {
+        currentlyEditingShader = nullptr;
+        return;
+    }
+
+    if (shader != currentlyEditingShader)
+    {
+        vertexEditor.SetText(shader->GetVertexCode());
+        fragmentEditor.SetText(shader->GetFragmentCode());
+        currentlyEditingShader = shader;
+    }
+
+    if (DrawButtonColored("Compile & Save (Ctrl+S)", BUTTON_COLORS::POSITIVE))
+    {
+        shader->SetVertexCode(vertexEditor.GetText());
+        shader->SetFragmentCode(fragmentEditor.GetText());
+
+        if (shader->TryRecompileAndSave())
+        {
+            fs::path shadersFolder = FileSystem::GetAssetPath("User", "Shaders");
+            fs::path finalPath = shadersFolder / (shader->GetName() + ".shader");
+            
+            std::ofstream out(finalPath.string());
+            if (out.is_open())
+            {
+                out << "#pragma VERTEX\n";
+                out << shader->GetVertexCode();
+                if (!shader->GetVertexCode().empty() && shader->GetVertexCode().back() != '\n')
+                    out << "\n"; 
+                    
+                out << "#pragma FRAGMENT\n";
+                out << shader->GetFragmentCode();
+                
+                out.close();
+                Console::LogInfo("Shader compiled and saved: " + shader->GetName(), LOG_CATEGORY::ASSETMANAGER);
+            }
+            else
+                Console::LogError("Failed to save shader file: " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
+        }
+        else
+            Console::LogError("Shader compilation failed. See logs for details.", LOG_CATEGORY::ASSETMANAGER);
+    }
+
+    if (ImGui::BeginTabBar("InspectorShaderTabs"))
+    {
+        if (ImGui::BeginTabItem("Vertex"))
+        {
+            vertexEditor.Render("VertexEditor", ImVec2(0, 0), true);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Fragment"))
+        {
+            fragmentEditor.Render("FragmentEditor", ImVec2(0, 0), true);
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
     }
 }
 
@@ -90,8 +179,25 @@ void UIInspector::DrawMaterial()
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
         TextUnformatted("No Shader");
         ImGui::PopStyleColor();
-    } else 
-        TextUnformatted(std::string("Shader: " + usedShader->GetName()).c_str());
+    } else {
+        ImGui::BeginGroup();
+        DrawAssetSlot("Shader", usedShader->GetName(), IconsLoader::shaderIconText);
+        ImGui::EndGroup();
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SHADER_D&D"))
+            {
+                const char* filename = (const char*)payload->Data;
+                Shader* newShader = AssetManager::GetShader(filename);
+                if (newShader)
+                    selectedMaterial->SetShader(newShader);
+                else
+                    Console::LogError("Dragged Invalid Payload", LOG_CATEGORY::ASSETMANAGER);
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
 }
 
 void UIInspector::DrawSceneObject()

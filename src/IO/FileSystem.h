@@ -35,27 +35,6 @@ class FileSystem
         return (rootDir / relativePath).string();
     }
 
-    static std::string GetVertexShaderPath(const std::string& filename)
-    {
-        fs::path path = userDir / "ShadersCode" / (filename + ".vert");
-        if (fs::exists(path))
-            return path.string();
-
-        Console::LogError("Vertex Shader not found: " + path.string(), LOG_CATEGORY::SYSTEM);
-        return "";
-    }
-
-    static std::string GetFragmentShaderPath(const std::string& filename)
-    {
-        fs::path path = userDir / "ShadersCode" / (filename + ".frag");
-        if (fs::exists(path))
-            return path.string();
-
-        Console::LogError("Fragment Shader not found: " + path.string(), LOG_CATEGORY::SYSTEM);
-        return "";
-    }
-
-
     template <typename... Args>
     static std::string GetAssetPath(Args... args) 
     {

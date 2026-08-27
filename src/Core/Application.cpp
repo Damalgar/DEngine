@@ -84,8 +84,10 @@ void Application::MainLoop()
         EndRenderCycle();
     }
 
+    AssetManager::SaveAll();
     SceneManager::GetActiveScene()->SetName("Autosave");
     SceneManager::SaveCurrentScene();
+
     delete SceneManager::GetActiveScene();
     AssetManager::Clear();
 }

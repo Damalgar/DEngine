@@ -222,7 +222,7 @@ void UITimeline::DrawGraph(ImVec2 size)
 
     float startCursorX = ImGui::GetCursorPosX();
     ImGui::SetCursorPosX(startCursorX + timelinePref.timelineMargin);
-    ImPlotFlags plotFlags = ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect;
+    ImPlotFlags plotFlags = ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoLegend;
     
     if (ImPlot::BeginPlot("##TimelineGraph", size, plotFlags))
     {
@@ -257,32 +257,25 @@ void UITimeline::DrawGraph(ImVec2 size)
             int hoveredFrame = static_cast<int>(std::round(mousePos.x));
             int valIndex = hoveredFrame - 1;
 
-            if (ImPlot::IsPlotHovered())
+            if (valIndex >= 0 && valIndex < static_cast<int>(values.size()))
             {
-                ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
-                int hoveredFrame = static_cast<int>(std::round(mousePos.x));
-                int valIndex = hoveredFrame - 1;
+                double ptX = static_cast<double>(hoveredFrame);
+                double ptY = static_cast<double>(values[valIndex]);
+                ImPlotSpec spec;
+                spec.Marker = ImPlotMarker_Circle;
+                spec.MarkerSize = 4.0f;
+                spec.MarkerFillColor = ImVec4(0.2f, 0.2f, 1.0f, 1.0f);
+                spec.MarkerLineColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+                spec.LineWeight = 1.5f;
 
-                if (valIndex >= 0 && valIndex < static_cast<int>(values.size()))
-                {
-                    double ptX = static_cast<double>(hoveredFrame);
-                    double ptY = static_cast<double>(values[valIndex]);
-                    ImPlotSpec spec;
-                    spec.Marker = ImPlotMarker_Circle;
-                    spec.MarkerSize = 4.0f;
-                    spec.MarkerFillColor = ImVec4(0.2f, 0.2f, 1.0f, 1.0f);
-                    spec.MarkerLineColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-                    spec.LineWeight = 1.5f;
+                ImPlot::PlotScatter("##HoverHighlight", &ptX, &ptY, 1, spec);
 
-                    ImPlot::PlotScatter("##HoverHighlight", &ptX, &ptY, 1, spec);
-
-                    ImGui::BeginTooltip();
-                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", parameter.c_str());
-                    ImGui::Separator();
-                    ImGui::Text("Value: %.4f", ptY);
-                    ImGui::Text("Frame: %d", hoveredFrame);
-                    ImGui::EndTooltip();
-                }
+                ImGui::BeginTooltip();
+                ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", parameter.c_str());
+                ImGui::Separator();
+                ImGui::Text("Value: %.4f", ptY);
+                ImGui::Text("Frame: %d", hoveredFrame);
+                ImGui::EndTooltip();
             }
         }
         ImPlot::EndPlot();

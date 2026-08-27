@@ -1,6 +1,10 @@
 #include "Core/AssetManager.h"
 #include "Graphics/PrimitiveFactory.h"
 #include "IO/Console.h"
+#include "Render/Shader.h"
+#include "Render/Material.h"
+#include "Render/Model.h"
+#include "Render/Texture.h"
 
 void AssetManager::Init()
 {
@@ -8,14 +12,6 @@ void AssetManager::Init()
     fs::path shadersCodeFolder = fs::path(FileSystem::GetAssetPath("User")) / "ShadersCode";
     if (!fs::exists(shadersCodeFolder))
         fs::create_directories(shadersCodeFolder);
-
-    fs::path defaultShadersCodePath = shadersCodeFolder / "DefaultVertex.vert";
-    if (!fs::exists(defaultShadersCodePath))
-        CreateNewVertexShaderCode("DefaultVertex");
-
-    defaultShadersCodePath = shadersCodeFolder / "DefaultFragment.frag";
-    if (!fs::exists(defaultShadersCodePath))
-        CreateNewFragmentShaderCode("DefaultFragment");
 
     fs::path defaultShaderPath = fs::path(FileSystem::GetAssetPath("User")) / "Shaders" / "DefaultShader.shader";
     if (!fs::exists(defaultShaderPath))
@@ -67,10 +63,10 @@ void AssetManager::LoadAllShaders()
 
 void AssetManager::LoadAllTextures()
 {
-    fs::path shadersCodePath = fs::path(FileSystem::GetAssetPath("User", "Textures"));
-    if (fs::exists(shadersCodePath))
+    fs::path texturesPath = fs::path(FileSystem::GetAssetPath("User", "Textures"));
+    if (fs::exists(texturesPath))
     {
-        for (const auto& entry : fs::directory_iterator(shadersCodePath))
+        for (const auto& entry : fs::directory_iterator(texturesPath))
         {
             std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && (ext == ".png" || ext == ".jpg" || ext == ".jpeg"))
@@ -81,10 +77,10 @@ void AssetManager::LoadAllTextures()
 
 void AssetManager::LoadAllMaterials()
 {
-    fs::path shadersCodePath = fs::path(FileSystem::GetAssetPath("User", "Materials"));
-    if (fs::exists(shadersCodePath))
+    fs::path materialsPath = fs::path(FileSystem::GetAssetPath("User", "Materials"));
+    if (fs::exists(materialsPath))
     {
-        for (const auto& entry : fs::directory_iterator(shadersCodePath))
+        for (const auto& entry : fs::directory_iterator(materialsPath))
         {
             std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && ext == ".mat")
@@ -95,10 +91,10 @@ void AssetManager::LoadAllMaterials()
 
 void AssetManager::LoadAllModels()
 {
-    fs::path shadersCodePath = fs::path(FileSystem::GetAssetPath("User", "Models"));
-    if (fs::exists(shadersCodePath))
+    fs::path modelsPath = fs::path(FileSystem::GetAssetPath("User", "Models"));
+    if (fs::exists(modelsPath))
     {
-        for (const auto& entry : fs::directory_iterator(shadersCodePath))
+        for (const auto& entry : fs::directory_iterator(modelsPath))
         {
             std::string ext = entry.path().extension().string();
             if (entry.is_regular_file() && (ext == ".obj" || ext == ".fbx"))
@@ -306,142 +302,6 @@ Material* AssetManager::GetMaterial(const std::string& filename)
     return materialsMap[filename];
 }
 
-void AssetManager::CreateNewVertexShaderCode(const std::string filename)
-{
-    fs::path dir = fs::path(FileSystem::GetAssetPath("User")) / "ShadersCode";
-    std::string extension = ".vert";
-
-    if (!fs::exists(dir))
-        fs::create_directories(dir);
-
-    fs::path finalPath = dir / (filename + extension);
-    int counter = 0;
-    while (fs::exists(finalPath))
-    {
-        counter++;
-        std::ostringstream oss;
-        oss << filename << "_" << std::setw(3) << std::setfill('0') << counter;
-        
-        finalPath = dir / (oss.str() + extension);
-    }
-
-    std::ofstream file(finalPath);
-    if (file.is_open())
-    {
-        file << R"(#version 330 core
-
-layout (location = 0) in vec3 pos;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 textCoords;
-layout (location = 3) in vec3 tangent;
-layout (location = 4) in vec3 bitangent;
-layout (location = 5) in vec4 color;
-
-uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
-
-uniform mat3 normalMatrix;
-
-out vec2 fragTextCoords;
-out vec3 fragNormal;
-out vec3 fragWorldPos;
-
-void main()
-{
-    //M.V.P
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(pos, 1);
-    fragTextCoords = textCoords;
-    fragNormal = normalize(normalMatrix * normal);
-    fragWorldPos = vec3(modelMatrix * vec4(pos, 1.0));
-})";
-        file.close();
-        Console::LogInfo("Created new Vertex Shader " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
-    }
-    else
-        Console::LogError("Cannot create Vertex Shader at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
-}
-
-void AssetManager::CreateNewFragmentShaderCode(const std::string filename)
-{
-    fs::path dir = fs::path(FileSystem::GetAssetPath("User")) / "ShadersCode";
-    std::string extension = ".frag";
-
-    if (!fs::exists(dir))
-        fs::create_directories(dir);
-
-    fs::path finalPath = dir / (filename + extension);
-    int counter = 0;
-    while (fs::exists(finalPath))
-    {
-        counter++;
-        std::ostringstream oss;
-        oss << filename << "_" << std::setw(3) << std::setfill('0') << counter;
-        
-        finalPath = dir / (oss.str() + extension);
-    }
-
-    std::ofstream file(finalPath);
-    if (file.is_open())
-    {
-        file << R"(#version 330 core
-
-struct Material {
-    vec4 tintColor;
-    float shininess;
-    int hasColorMap;
-    int hasSpecularMap;
-};
-
-out vec4 FragColor;
-
-in vec3 fragWorldPos;
-in vec2 fragTextCoords;
-in vec3 fragNormal;
-
-uniform vec3 viewPos;
-
-uniform Material material;
-uniform sampler2D colorMap;
-uniform sampler2D specularMap;
-
-void main()
-{
-    //===LIGHTNING===
-
-    //variables
-    vec4 albedo = material.hasColorMap == 1 ? texture(colorMap, fragTextCoords) * material.tintColor : material.tintColor;
-    float specularIntensity = material.hasSpecularMap == 1 ? texture(specularMap, fragTextCoords).r : 1.0;
-    vec3 lightColor = vec3(1.0, 1.0, 1.0);
-    float Kamb = 0.1;
-
-    vec3 N = normalize(fragNormal);
-    vec3 lightDir = normalize(vec3(-0.5, -1.0, -0.5));
-    vec3 L = -lightDir;
-    vec3 V = normalize(viewPos - fragWorldPos);
-    vec3 H = normalize(V + L);
-
-    //ambient
-    vec3 ambientLight = Kamb * albedo.rgb;
-
-    //diffuse
-    float diff = max(0.0, dot(N,L));
-    vec3 diffLight = albedo.rgb * diff;
-
-    //specular
-    float spec = pow(max(0.0, dot(H, N)), material.shininess);
-    vec3 specLight = lightColor * (spec * specularIntensity);
-
-    vec3 finalColor = diffLight + ambientLight + specLight;
-    FragColor = vec4(finalColor, 1.0);
-})";
-        file.close();
-        Console::LogInfo("Created new Fragment Shader " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
-    }
-    else
-        Console::LogError("Cannot create Fragment Shader at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
-}
-
 void AssetManager::CreateNewShader(const std::string filename)
 {
     fs::path dir = fs::path(FileSystem::GetAssetPath("User")) / "Shaders";
@@ -464,19 +324,8 @@ void AssetManager::CreateNewShader(const std::string filename)
     std::string pathString = finalPath.string();
     std::string finalName = finalPath.stem().string();
 
-    Shader* newShader = new Shader("", "", finalName);
+    Shader* newShader = new Shader(filename, false);
     shadersMap[finalName] = newShader;
-
-    json shaderJson = newShader->ToJson();
-    std::ofstream file(finalPath);
-    if (file.is_open())
-    {
-        file << shaderJson.dump(4);
-        file.close();
-        Console::LogInfo("Created new Shader " + pathString, LOG_CATEGORY::ASSETMANAGER);
-    }
-    else
-        Console::LogWarn("Can't load Shader at " + pathString, LOG_CATEGORY::ASSETMANAGER);
 }
 
 void AssetManager::LoadShader(const std::string& filename)
@@ -505,13 +354,7 @@ void AssetManager::LoadShader(const std::string& filename)
         return;
     }
 
-    json j;
-    file >> j;
-    file.close();
-
-    Shader* newShader = new Shader(); 
-    newShader->SetName(key);
-    newShader->FromJson(j);
+    Shader* newShader = new Shader(key); 
 
     shadersMap[key] = newShader;
     Console::LogInfo("Shader loaded " + key, LOG_CATEGORY::ASSETMANAGER);
@@ -526,4 +369,29 @@ Shader* AssetManager::GetShader(const std::string& filename)
     }
 
     return shadersMap[filename];
+}
+
+void AssetManager::SaveAll()
+{
+    SaveAllMaterials();
+}
+
+void AssetManager::SaveAllMaterials()
+{
+    fs::path materialsFolder = fs::path(FileSystem::GetAssetPath("User")) / "Materials";
+    for(const auto it : materialsMap)
+    {
+        Material* mat = it.second;
+        json j = mat->ToJson();
+        fs::path finalPath = materialsFolder / (mat->GetName() + ".mat");
+        
+        std::ofstream file(finalPath);
+        if (file.is_open())
+        {
+            file << j.dump(4);
+            file.close();
+        }
+        else
+            Console::LogError("Error saving material at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
+    }
 }

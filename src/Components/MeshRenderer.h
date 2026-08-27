@@ -1,10 +1,11 @@
 #pragma once
 #include "Components/Component.h"
-#include "Render/Material.h"
 #include "Render/Model.h"
 #include <variant>
 
 using UniformValue = std::variant<float, int, vec3, vec4>;
+
+class Material;
 
 class MeshRenderer : public Component {
     public:

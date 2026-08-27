@@ -7,10 +7,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-void SetupImGuiStyle();
-void StartRenderCycle(GLFWwindow* window);
-void EndRenderCycle(GLFWwindow* window);
-
 int main(int argc, char* argv[])
 {
     Application app = Application();
@@ -27,3 +23,6 @@ int main(int argc, char* argv[])
 #endif
     return 0;
 }
+
+//Mettere preset della macchina con oggetti già pronti.
+//L'utente può decidere che componente importare (tipo z4000), e una volta importato si mette da solo in posizione, con il suo telemetry viewer già pronto

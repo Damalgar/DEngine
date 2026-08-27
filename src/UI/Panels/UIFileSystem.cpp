@@ -166,64 +166,6 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Shaders Code"))
-        {
-            if (DrawButtonColored("+ Create Vertex Shader", BUTTON_COLORS::GREY))
-                AssetManager::CreateNewFragmentShaderCode();
-
-            SpacingH(10);
-            ImGui::SameLine();
-
-            if (DrawButtonColored("+ Create Fragment Shader", BUTTON_COLORS::GREY))
-                AssetManager::CreateNewVertexShaderCode();
-
-            ImGui::Spacing();
-
-            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
-
-            fs::path shadersCodePath = fs::path(FileSystem::GetAssetPath("User", "ShadersCode"));
-            if (fs::exists(shadersCodePath))
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
-                float currentX = 0.0f;
-
-                for (const auto& entry : fs::directory_iterator(shadersCodePath))
-                {
-                    std::string ext = entry.path().extension().string();
-                    if (entry.is_regular_file() && (ext == ".vert" || ext == ".frag"))
-                    {
-                        std::string filename = entry.path().stem().string();
-                        ImGui::PushID(entry.path().string().c_str());
-
-                        if (currentX == 0.0f)
-                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
-                        else
-                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
-
-                        ImGui::BeginGroup();
-                            ImTextureID iconID = ext == ".vert" ? 
-                                (ImTextureID)(intptr_t)IconsLoader::vertexShaderIconText : 
-                                (ImTextureID)(intptr_t)IconsLoader::fragmentShaderIconText;
-                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
-                                    BUTTON_COLORS::NONE, "Shader"))
-                            {
-                                
-                            }
-                            TextElided(filename, fileSystemPref.cellSize);
-                        ImGui::EndGroup();
-                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
-                        if (currentX + fileSystemPref.cellSize > availableWidth)
-                            currentX = 0;
-
-                        ImGui::PopID();
-                    }
-                }
-            }
-
-            FontsLoader::PopFont();
-            ImGui::EndTabItem();
-        }
-
         if (ImGui::BeginTabItem("Shaders"))
         {
             if (DrawButtonColored("+ Create", BUTTON_COLORS::GREY))
@@ -253,13 +195,25 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
 
                         ImGui::BeginGroup();
+                        if (filename == "DefaultShader")
+                            ImGui::BeginDisabled();
                             if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
                                     BUTTON_COLORS::NONE, "Shader"))
                             {
-                                
+                                SelectionManager::Select(AssetManager::GetShader(filename));
                             }
+                        if (filename == "DefaultShader")
+                            ImGui::EndDisabled();
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
+
+                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                        {
+                            ImGui::SetDragDropPayload("SHADER_D&D", filename.c_str(), filename.size() + 1);
+                            TextUnformatted(filename);
+                            ImGui::EndDragDropSource();
+                        }
+
                         currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
                         if (currentX + fileSystemPref.cellSize > availableWidth)
                             currentX = 0;
@@ -302,11 +256,15 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
 
                         ImGui::BeginGroup();
+                        if (filename == "DefaultMaterial")
+                            ImGui::BeginDisabled();
                             if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
                                     BUTTON_COLORS::NONE, "Material"))
                             {
                                 SelectionManager::Select(AssetManager::GetMaterial(filename));
                             }
+                        if (filename == "DefaultMaterial")
+                            ImGui::EndDisabled();
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
 

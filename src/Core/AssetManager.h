@@ -2,14 +2,15 @@
 #include <unordered_map>
 #include <string>
 #include <filesystem>
-#include "Render/Model.h"
-#include "Render/Texture.h"
-#include "Render/Material.h"
 #include "IO/FileSystem.h"
 #include "Utils/Utils.h"
 #include "Core/Application.h"
-#include "Render/Shader.h"
 #include "Core/AssimpImportManager.h"
+
+class Material;
+class Shader;
+class Texture;
+class Model;
 
 namespace fs = std::filesystem;
 
@@ -30,14 +31,14 @@ class AssetManager {
     static void LoadAllModels();
     static void LoadAll();
 
+    static void SaveAll();
+    static void SaveAllMaterials();
+
     static void Clear();
 
     static void CreateNewMaterial(const std::string filename = "Material");
     static Material* GetMaterial(const std::string& filename);
     static void LoadMaterial(const std::string& filename);
-
-    static void CreateNewVertexShaderCode(const std::string filename = "ShaderV");
-    static void CreateNewFragmentShaderCode(const std::string filename = "ShaderF");
 
     static void CreateNewShader(const std::string filename = "Shader");
     static Shader* GetShader(const std::string& filename);

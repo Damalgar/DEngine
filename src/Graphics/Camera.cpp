@@ -41,7 +41,7 @@ void Camera::Update()
     if (glm::length(inputDir) != 0.0f)
     {
         inputDir = glm::normalize(inputDir);
-        float speed = m_movementSpeed * AppTime::DeltaTime();
+        float speed = m_movementSpeed * 100 * AppTime::DeltaTime();
 
         if (InputsManager::IsKeyDown(ImGuiKey_LeftShift))
             speed *= 5;
