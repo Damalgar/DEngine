@@ -35,9 +35,9 @@ class Scene : public ISerializable {
 
     SceneObject* InstantiateModelNode(Model* model, const ModelNode& node, SceneObject* parentObject);
 
-    void SetShowBoundingBoxes(const bool value) { m_showBoundingBoxes = value; }
-    void ToggleShowBoundingBoxes() { SetShowBoundingBoxes(!m_showBoundingBoxes); }
-    bool GetShowBoundingBoxes() const { return m_showBoundingBoxes; }
+    void SetDrawGizmos(const bool value) { m_drawGizmos = value; }
+    void ToggleDrawGizmos() { SetDrawGizmos(!m_drawGizmos); }
+    bool GetDrawGizmos() const { return m_drawGizmos; }
 
     const mat4& GetViewMatrix() const { return m_currentViewMatrix; }
     const mat4& GetProjectionMatrix() const { return m_currentProjectionMatrix; }
@@ -48,5 +48,6 @@ class Scene : public ISerializable {
 
     mat4 m_currentViewMatrix = mat4(1.0f);
     mat4 m_currentProjectionMatrix = mat4(1.0f);
-    bool m_showBoundingBoxes = false;
+    
+    bool m_drawGizmos = false;
 };

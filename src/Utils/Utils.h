@@ -71,6 +71,14 @@ namespace Utils
     /// @param projectionMatrix projection matrix (M.V.P. model)
     void DrawDebugBox(const BoundingBox& box, const mat4& viewMatrix, const mat4& projectionMatrix);
 
+    /// @brief Draws a Wired sphere for debug
+    /// @param position the position of the sphere
+    /// @param radius the radius of the sphere
+    /// @param color the color of the wires
+    /// @param viewMatrix view matrix (M.V.P. model) 
+    /// @param projectionMatrix projection matrix (M.V.P. model)
+    void DrawWireSphere(const vec3& position, float radius, const vec4& color, const mat4& viewMatrix, const mat4& projectionMatrix);
+
     /// @brief checks if a ray intersects a specific boundingBox
     /// @param origin the origin from where the ray will begin
     /// @param direction the direction that the ray will follow

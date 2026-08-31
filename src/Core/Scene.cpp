@@ -39,6 +39,14 @@ void Scene::Render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatri
         MeshRenderer* renderer = obj->GetComponent<MeshRenderer>();
         if (renderer)
             renderer->Draw(viewMatrix, projectionMatrix, viewPos);
+
+        const std::vector<std::unique_ptr<Component>>& components = obj->GetComponents();
+
+        if (m_drawGizmos)
+        {
+            for (const auto& component : components)
+                component->OnDrawGizmos(viewMatrix, projectionMatrix, viewPos);
+        }
     }
 }
 

@@ -4,6 +4,7 @@
 #include "Core/TagManager.h"
 #include "UI/SelectionManager.h"
 #include "Core/TelemetryManager.h"
+#include "UI/PopupManager.h"
 
 #include "UI/Panels/UIFileSystem.h"
 #include "UI/Panels/UIConsole.h"
@@ -83,6 +84,8 @@ void Editor::DrawPanels()
 
     ImGui::SetNextWindowClass(&window_class);
     DrawBottomPanel();
+
+    PopupManager::Draw();
 
     if (m_draggedNodeToMove != nullptr)
     {
@@ -424,8 +427,8 @@ void Editor::DrawScenePanel()
         Spacing(5);
 
         if (DrawButtonImage(IconsLoader::boundingBoxIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "BoundingBox", true, 
-            activeScene->GetShowBoundingBoxes()))
-            activeScene->ToggleShowBoundingBoxes();
+            activeScene->GetDrawGizmos()))
+            activeScene->ToggleDrawGizmos();
         isHoveringUI |= ImGui::IsItemHovered();
 
         SceneObject* selectedSceneObject = SelectionManager::GetAsSceneObject();

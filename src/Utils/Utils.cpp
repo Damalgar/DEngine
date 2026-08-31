@@ -126,6 +126,93 @@ namespace Utils
         glLineWidth(1.0f);
     }
 
+    void DrawWireSphere(const vec3& position, float radius, const vec4& color, const mat4& viewMatrix, const mat4& projectionMatrix)
+    {
+        static unsigned int vao = 0;
+        static unsigned int vbo = 0;
+        static int numVertices = 0;
+        
+        if (vao == 0)
+        {
+            std::vector<float> vertices;
+            const int segments = 32;
+            const float angleStep = (2.0f * 3.14159265359f) / segments;
+
+            for (int i = 0; i < segments; i++)
+            {
+                float angle1 = i * angleStep;
+                float angle2 = (i + 1) * angleStep;
+                
+                vertices.push_back(std::cos(angle1));
+                vertices.push_back(std::sin(angle1));
+                vertices.push_back(0.0f);
+                
+                vertices.push_back(std::cos(angle2));
+                vertices.push_back(std::sin(angle2));
+                vertices.push_back(0.0f);
+            }
+
+            for (int i = 0; i < segments; i++)
+            {
+                float angle1 = i * angleStep;
+                float angle2 = (i + 1) * angleStep;
+                
+                vertices.push_back(std::cos(angle1));
+                vertices.push_back(0.0f);
+                vertices.push_back(std::sin(angle1));
+                
+                vertices.push_back(std::cos(angle2));
+                vertices.push_back(0.0f);
+                vertices.push_back(std::sin(angle2));
+            }
+
+            for (int i = 0; i < segments; i++)
+            {
+                float angle1 = i * angleStep;
+                float angle2 = (i + 1) * angleStep;
+                
+                vertices.push_back(0.0f);
+                vertices.push_back(std::cos(angle1));
+                vertices.push_back(std::sin(angle1));
+                
+                vertices.push_back(0.0f);
+                vertices.push_back(std::cos(angle2));
+                vertices.push_back(std::sin(angle2));
+            }
+
+            numVertices = vertices.size() / 3;
+
+            glGenVertexArrays(1, &vao);
+            glGenBuffers(1, &vbo);
+            glBindVertexArray(vao);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(0);
+            glBindVertexArray(0);
+        }
+
+        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), position);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(radius));
+
+        Shader* debugShader = AssetManager::GetShader("DefaultShader"); 
+        debugShader->Use();
+        debugShader->SetMat4("modelMatrix", modelMatrix);
+        debugShader->SetMat4("viewMatrix", viewMatrix);
+        debugShader->SetMat4("projectionMatrix", projectionMatrix);
+        
+        debugShader->SetInt("material.hasColorMap", 0);
+        debugShader->SetVec4("material.tintColor", color);
+        
+        glLineWidth(7.0f);
+        
+        glBindVertexArray(vao);
+        glDrawArrays(GL_LINES, 0, numVertices); 
+        glBindVertexArray(0);
+
+        glLineWidth(1.0f);
+    }
+
     bool RayIntersectsBoundingBox(const vec3& origin, const vec3& direction, const BoundingBox& box, float& outDistance)
     {
         //Slab method

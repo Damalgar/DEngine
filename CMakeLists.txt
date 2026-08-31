@@ -100,6 +100,7 @@ set(SOURCES
     #===COMPONENTS===
     src/Components/TelemetryViewer.cpp
     src/Components/MeshRenderer.cpp
+    src/Components/MountPoint.cpp
     
     #===TOOLS===
     src/Tools/FsDialog.cpp
@@ -111,6 +112,7 @@ set(SOURCES
     #===UI===
     src/UI/Editor.cpp
     src/UI/SelectionManager.cpp
+    src/UI/PopupManager.cpp
     
     #===UI/PANELS===
     src/UI/Panels/UIFileSystem.cpp

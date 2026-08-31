@@ -139,7 +139,7 @@ void Application::EndRenderCycle()
     glfwSwapBuffers(m_window);
 }
 
-void Application::AddModelToScene(const std::string &filename)
+void Application::AddModelToScene(const std::string &filename, SceneObject* mountPoint)
 {
     Model* model = AssetManager::GetModel(filename);
     if (!model)
@@ -155,11 +155,20 @@ void Application::AddModelToScene(const std::string &filename)
         {
             while (startNode->meshIndices.empty() && startNode->children.size() == 1)
                 startNode = &startNode->children[0];
-            SceneManager::GetActiveScene()->InstantiateModelNode(model, *startNode, nullptr);
+            SceneObject* importedObj = SceneManager::GetActiveScene()->InstantiateModelNode(model, *startNode, nullptr);
+            if (importedObj)
+            {
+                if (mountPoint)
+                    importedObj->transform.SetParent(&mountPoint->transform, false);
+            }
         } else {
             SceneObject* rootObj = SceneManager::GetActiveScene()->InstantiateModelNode(model, model->GetRootNode(), nullptr);
             if (rootObj)
+            {
                 rootObj->name = model->GetName();
+                if (mountPoint)
+                    rootObj->transform.SetParent(&mountPoint->transform, false);
+            }
         }
     }
 }

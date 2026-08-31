@@ -23,7 +23,7 @@ class Camera {
 
     float m_yaw = -90; // right/left
     float m_pitch = 0; // up/down
-    float m_movementSpeed = 5.0f;
+    float m_movementSpeed = 15.0f;
     float m_sensitivity = 0.1f;
 
     bool m_isDragging = false;

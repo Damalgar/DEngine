@@ -5,13 +5,15 @@
 #include "Core/ISerializable.h"
 #include "Tools/drawUtils.h"
 #include "IO/Console.h"
+#include "Vendor/glm/glm.hpp"
 
 class SceneObject;
 
 enum class COMPONENT_TYPE
 {
     TELEMETRY_VIEWER = 0,
-    MESH_RENDERER
+    MESH_RENDERER,
+    MOUNT_POINT
 };
 
 class Component : public ISerializable
@@ -33,6 +35,7 @@ class Component : public ISerializable
     virtual ~Component() = default;
     virtual void OnGuiDraw() = 0;
     virtual void Update() = 0;
+    virtual void OnDrawGizmos(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos) const {}
 
     virtual SceneObject* GetSceneObject() const { return m_sceneObject; }
     std::string GetName() const { return m_name; }
@@ -45,6 +48,7 @@ class Component : public ISerializable
         {
         case COMPONENT_TYPE::TELEMETRY_VIEWER: return "Telemetry Viewer";
         case COMPONENT_TYPE::MESH_RENDERER: return "Mesh Renderer"; 
+        case COMPONENT_TYPE::MOUNT_POINT: return "Mount Point";
         
         default: return "Unknown component";
         }
@@ -66,7 +70,8 @@ class Component : public ISerializable
 
     inline static const std::vector<ComboEntry<COMPONENT_TYPE>> availableComponentsOptions = {
         { "Mesh Renderer", COMPONENT_TYPE::MESH_RENDERER },
-        { "Telemetry Viewer", COMPONENT_TYPE::TELEMETRY_VIEWER }
+        { "Telemetry Viewer", COMPONENT_TYPE::TELEMETRY_VIEWER },
+        { "Mount Point", COMPONENT_TYPE::MOUNT_POINT }
     };
 
     protected:

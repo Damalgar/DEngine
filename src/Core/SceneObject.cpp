@@ -92,6 +92,9 @@ Component* SceneObject::AddComponent(COMPONENT_TYPE componentType)
     case COMPONENT_TYPE::MESH_RENDERER:
         newComp = std::make_unique<MeshRenderer>(this);
         break;
+    case COMPONENT_TYPE::MOUNT_POINT:
+        newComp = std::make_unique<MountPoint>(this);
+        break;
     default:
         Console::LogWarn("Unknown component type requested for " + name, LOG_CATEGORY::SCENE);
         return nullptr;

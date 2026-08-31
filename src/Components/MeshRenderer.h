@@ -25,8 +25,9 @@ class MeshRenderer : public Component {
     void FromJson(const json& j) override;
 
     void OnGuiDraw() override;
+    void OnDrawGizmos(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos) const override;
     
-    BoundingBox GetGlobalBoundingBox();
+    BoundingBox GetGlobalBoundingBox() const;
 
     void SetFloatOverride(const std::string& name, float value) { m_materialOverrides[name] = value; }
     void SetIntOverride(const std::string& name, int value) { m_materialOverrides[name] = value; }

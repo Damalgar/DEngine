@@ -8,6 +8,7 @@
 #include "Core/AssetManager.h"
 #include "Fonts/FontsLoader.h"
 #include "UI/SelectionManager.h"
+#include "UI/PopupManager.h"
 
 #include "UI/EditorCustomizations.h"
 
@@ -68,7 +69,13 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
                                     BUTTON_COLORS::NONE, "Model"))
                             {
-                                Application::Instance->AddModelToScene(filename);
+                                PopupManager::OpenAddModelPopup(
+                                    filename,
+                                    [filename](SceneObject* mountPoint)
+                                    {
+                                        Application::Instance->AddModelToScene(filename, mountPoint);
+                                    }
+                                );
                             }
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();

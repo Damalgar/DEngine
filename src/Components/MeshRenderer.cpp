@@ -54,12 +54,12 @@ void MeshRenderer::Draw(const glm::mat4& viewMatrix, const glm::mat4& projection
         if (mesh)
             mesh->Draw();
     }
+}
 
-    if (SceneManager::GetActiveScene()->GetShowBoundingBoxes())
-    {
-        BoundingBox box = GetGlobalBoundingBox();
-        Utils::DrawDebugBox(box, viewMatrix, projectionMatrix);
-    }
+void MeshRenderer::OnDrawGizmos(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& viewPos) const
+{
+    const BoundingBox box = GetGlobalBoundingBox();
+    Utils::DrawDebugBox(box, viewMatrix, projectionMatrix);
 }
 
 json MeshRenderer::ToJson() const
@@ -128,7 +128,7 @@ void MeshRenderer::OnGuiDraw()
     }
 }
 
-BoundingBox MeshRenderer::GetGlobalBoundingBox()
+BoundingBox MeshRenderer::GetGlobalBoundingBox() const
 {
     if (!m_model || m_meshIndices.empty())
         return BoundingBox();
