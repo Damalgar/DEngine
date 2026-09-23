@@ -18,6 +18,11 @@
 #include "Icons/Images/InfoIcon.h"
 #include "Icons/Images/WarningIcon.h"
 #include "Icons/Images/ErrorIcon.h"
+#include "Icons/Images/localGizmosIcon.h"
+#include "Icons/Images/worldGizmosIcon.h"
+#include "Icons/Images/originPivotIcon.h"
+#include "Icons/Images/boundingBoxPivotIcon.h"
+#include "Icons/Images/prefabIcon.h"
 
 class IconsLoader {
     public:
@@ -35,6 +40,11 @@ class IconsLoader {
     inline static GLuint infoIconText = 0;
     inline static GLuint warningIconText = 0;
     inline static GLuint errorIconText = 0;
+    inline static GLuint localGizmosIconText = 0;
+    inline static GLuint worldGizmosIconText = 0;
+    inline static GLuint originPivotIconText = 0;
+    inline static GLuint boundingBoxPivotIconText = 0;
+    inline static GLuint prefabIconText = 0;
 
     static void LoadIcons(GLFWwindow* window);
     static void LoadAppIcon(GLFWwindow* window);

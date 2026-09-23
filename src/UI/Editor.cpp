@@ -10,6 +10,7 @@
 #include "UI/Panels/UIConsole.h"
 #include "UI/Panels/UIInspector.h"
 #include "UI/Panels/UITimeline.h"
+#include "UI/Panels/UITags.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -123,10 +124,10 @@ void Editor::DrawPanels()
     {
         if (SceneManager::GetActiveScene())
         {
-            SceneManager::GetActiveScene()->RemoveObject(m_objectToDelete);
-
             if (m_objectToDelete == SelectionManager::GetAsSceneObject())
                 SelectionManager::Deselect();
+
+            SceneManager::GetActiveScene()->RemoveObject(m_objectToDelete);
         }
 
         m_objectToDelete = nullptr;
@@ -160,6 +161,7 @@ void Editor::DrawMenuBar()
                             NotificationSystem::Show("CSV Loaded");
                             UITimeline::SetStartFrame(1);
                             UITimeline::SetEndFrame(TelemetryManager::GetMaxFrames());
+                            UITags::OnCsvLoaded();
                         }
                         else
                             NotificationSystem::Show("Error loading CSV", TOAST_ERROR);
@@ -230,16 +232,21 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
     if (childTransforms.empty())
         flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
+    bool emptyModel = obj->GetComponent<MeshRenderer>() != nullptr && obj->GetComponent<MeshRenderer>()->GetModel() == nullptr;
+
+    if (emptyModel)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+
     bool nodeOpen = ImGui::TreeNodeEx((void*)obj, flags, "%s", obj->name.c_str());
+    
+    if (emptyModel)
+        ImGui::PopStyleColor();
 
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         SelectionManager::Select(obj);
 
     if (ImGui::BeginPopupContextItem())
     {
-        if (ImGui::MenuItem("Delete"))
-            m_objectToDelete = obj;
-
         if (ImGui::MenuItem("Add Empty Object"))
         {
             m_addEmptyObject = true;
@@ -251,6 +258,16 @@ void Editor::DrawHierarchyNode(SceneObject* obj)
             m_addCubeObject = true;
             m_addObjectParent = obj;
         }
+
+        Separator();
+
+        if (ImGui::MenuItem("Save preset"))
+        {
+            AssetManager::CreateNewPreset(obj, obj->name);
+        }
+
+        if (ImGui::MenuItem("Delete"))
+            m_objectToDelete = obj;
 
         ImGui::EndPopup();
     }
@@ -298,64 +315,8 @@ void Editor::DrawTagsPanel()
     ImGui::Begin("Tags", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar);
     ImGui::PopStyleVar();
 
-    ImGui::Dummy(ImVec2(0.0f, 4.0f));
-    ImGui::Indent(10.0f);
-    ImGui::TextDisabled("Tags");
-    ImGui::Unindent(10.0f);
-    ImGui::Separator();
+    UITags::Draw();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-    std::vector<std::string> uniqueTags;
-    const std::vector<SceneObject*> sceneObjects = Application::Instance->GetSceneObjects();
-
-    static char newTagBuf[64] = "";
-    ImGui::InputText("##NewTag", newTagBuf, sizeof(newTagBuf));
-    ImGui::SameLine();
-    if (DrawButtonColored("+", BUTTON_COLORS::GREY))
-    {
-        if (strlen(newTagBuf) > 0)
-        {
-            bool added = TagManager::AddTag(newTagBuf);
-            if (added)
-            {
-                std::string notify = "Tag " + std::string(newTagBuf) + " added"; 
-                NotificationSystem::Show(notify.c_str(), TOAST_INFO);
-                newTagBuf[0] = '\0';
-            } else
-            {
-                std::string notify = "Tag " + std::string(newTagBuf) + " already exists"; 
-                NotificationSystem::Show(notify.c_str(), TOAST_WARNING);
-            }
-        }
-    }
-
-    const std::vector<std::string>& tags = TagManager::GetTags();
-    for (const std::string& tag : tags)
-    {
-        if (tag.empty() || tag == "")
-        {
-            TagManager::RemoveTag("");
-            continue;
-        }
-
-        ImGui::PushID(tag.c_str());
-        bool isVisible = TagManager::IsTagVisible(tag);
-        if (ImGui::Checkbox(tag.c_str(), &isVisible))
-            TagManager::SetTagVisibility(tag, isVisible);
-
-        if (tag != "Default")
-        {
-            ImGui::SameLine(ImGui::GetWindowWidth() - 50);
-            if (DrawButtonColored("X", BUTTON_COLORS::NEGATIVE))
-                TagManager::RemoveTag(tag);
-        }
-        ImGui::PopID();
-    }
-
-    Spacing(3);
-
-    ImGui::PopStyleVar();
     ImGui::End();
 }
 
@@ -407,29 +368,50 @@ void Editor::DrawScenePanel()
         bool isUsingGizmos = false;
 
         ImGui::SetCursorPos(ImVec2(0, 0));
-        TextUnformatted(activeScene->GetName().c_str());
 
-        if (DrawButtonImage(IconsLoader::gizmosTranslateIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "transform", true, 
-            m_currentGizmoOperation==ImGuizmo::OPERATION::TRANSLATE))
-            m_currentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
-        isHoveringUI |= ImGui::IsItemHovered();
+        ImGui::BeginGroup();
+            TextUnformatted(activeScene->GetName().c_str());
 
-        if (DrawButtonImage(IconsLoader::gizmosRotateIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "rotate", true, 
-            m_currentGizmoOperation==ImGuizmo::OPERATION::ROTATE))
-            m_currentGizmoOperation = ImGuizmo::OPERATION::ROTATE;
-        isHoveringUI |= ImGui::IsItemHovered();
+            if (DrawButtonImage(IconsLoader::gizmosTranslateIconText, scenePref.squareButtonSize, BUTTON_COLORS::GREEN, "transform", true, 
+                m_currentGizmoOperation==ImGuizmo::OPERATION::TRANSLATE))
+                m_currentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+            isHoveringUI |= ImGui::IsItemHovered();
 
-        if (DrawButtonImage(IconsLoader::gizmosScaleIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "scale", true, 
-            m_currentGizmoOperation==ImGuizmo::OPERATION::SCALE))
-            m_currentGizmoOperation = ImGuizmo::OPERATION::SCALE;
-        isHoveringUI |= ImGui::IsItemHovered();
+            if (DrawButtonImage(IconsLoader::gizmosRotateIconText, scenePref.squareButtonSize, BUTTON_COLORS::GREEN, "rotate", true, 
+                m_currentGizmoOperation==ImGuizmo::OPERATION::ROTATE))
+                m_currentGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+            isHoveringUI |= ImGui::IsItemHovered();
 
-        Spacing(5);
+            if (DrawButtonImage(IconsLoader::gizmosScaleIconText, scenePref.squareButtonSize, BUTTON_COLORS::GREEN, "scale", true, 
+                m_currentGizmoOperation==ImGuizmo::OPERATION::SCALE))
+                m_currentGizmoOperation = ImGuizmo::OPERATION::SCALE;
+            isHoveringUI |= ImGui::IsItemHovered();
 
-        if (DrawButtonImage(IconsLoader::boundingBoxIconText, scenePref.buttonSize, BUTTON_COLORS::POSITIVE, "BoundingBox", true, 
-            activeScene->GetDrawGizmos()))
-            activeScene->ToggleDrawGizmos();
-        isHoveringUI |= ImGui::IsItemHovered();
+            Spacing(5);
+
+            if (DrawButtonImage(IconsLoader::boundingBoxIconText, scenePref.squareButtonSize, BUTTON_COLORS::GREEN, "BoundingBox", true, 
+                activeScene->GetDrawGizmos()))
+                activeScene->ToggleDrawGizmos();
+            isHoveringUI |= ImGui::IsItemHovered();
+
+        ImGui::EndGroup();
+        ImGui::SameLine();
+
+        SpacingH(10);
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(20, 0));
+
+        bool hoveringSwitch = false;
+        ImGui::SameLine();
+        DrawSwitchImages(IconsLoader::localGizmosIconText, IconsLoader::worldGizmosIconText, &m_gizmosLocal, scenePref.switchButtonSize, "switchGizmos",
+             &hoveringSwitch, 6, 25);
+        isHoveringUI |= hoveringSwitch;
+
+        ImGui::SameLine();
+        DrawSwitchImages(IconsLoader::originPivotIconText, IconsLoader::boundingBoxPivotIconText, &m_originPivoting, scenePref.switchButtonSize, "switchPivoting",
+             &hoveringSwitch, 6, 25);
+        isHoveringUI |= hoveringSwitch;
+
+        ImGui::PopStyleVar();
 
         SceneObject* selectedSceneObject = SelectionManager::GetAsSceneObject();
         mat4 viewMat = activeScene->GetViewMatrix();
@@ -442,13 +424,31 @@ void Editor::DrawScenePanel()
 
         if (selectedSceneObject && mainCamera)
         {
+            mat4 gizmoMatrix = modelMat;
+            mat4 offsetMatrix = mat4(1.0f);
+
+            if (!m_originPivoting)
+            {
+                vec3 boxCenter;
+                MeshRenderer* meshRenderer = selectedSceneObject->GetComponent<MeshRenderer>();
+                if (meshRenderer)
+                {
+                    boxCenter = meshRenderer->GetGlobalBoundingBox().GetCenter();
+                }
+                else
+                    boxCenter = vec3(modelMat[3]); 
+
+                gizmoMatrix[3] = vec4(boxCenter, 1.0f);
+                offsetMatrix = glm::inverse(gizmoMatrix) * modelMat;
+            }
+
             ImGuizmo::Manipulate
             (
                 glm::value_ptr(viewMat),
                 glm::value_ptr(projectionMat),
                 m_currentGizmoOperation,
-                ImGuizmo::MODE::LOCAL,
-                glm::value_ptr(modelMat)
+                m_gizmosLocal ? ImGuizmo::MODE::LOCAL : ImGuizmo::MODE::WORLD,
+                glm::value_ptr(gizmoMatrix)
             );
 
             isHoveringGizmos = ImGuizmo::IsOver();
@@ -456,6 +456,8 @@ void Editor::DrawScenePanel()
 
             if (isUsingGizmos)
             {
+                modelMat = gizmoMatrix * offsetMatrix;
+
                 vec3 newTranslation;
                 quat newRotationQuat;
                 vec3 newScale;
@@ -510,13 +512,13 @@ void Editor::DrawBottomPanel()
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
     ImVec2 tabSize = ImVec2(150, 40);
 
-    if (DrawButtonColored("Assets", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::FILESYSTEM, tabSize)
+    if (DrawButtonColored("Assets", BUTTON_COLORS::BLUE, true, m_bottomPanelActiveType == panel::FILESYSTEM, tabSize)
         && m_bottomPanelActiveType != panel::FILESYSTEM)
             m_bottomPanelActiveType = panel::FILESYSTEM;
 
     SpacingH(spacing);
     ImGui::SameLine();
-    if (DrawButtonColored("Console", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::CONSOLE, tabSize)
+    if (DrawButtonColored("Console", BUTTON_COLORS::BLUE, true, m_bottomPanelActiveType == panel::CONSOLE, tabSize)
         && m_bottomPanelActiveType != panel::CONSOLE)
             m_bottomPanelActiveType = panel::CONSOLE;
 
@@ -526,7 +528,7 @@ void Editor::DrawBottomPanel()
     if (!showTimeline)
         ImGui::BeginDisabled();
         
-    if (DrawButtonColored("Timeline", BUTTON_COLORS::UTILITY, true, m_bottomPanelActiveType == panel::TIMELINE, tabSize)
+    if (DrawButtonColored("Timeline", BUTTON_COLORS::BLUE, true, m_bottomPanelActiveType == panel::TIMELINE, tabSize)
         && m_bottomPanelActiveType != panel::TIMELINE)
             m_bottomPanelActiveType = panel::TIMELINE;
 

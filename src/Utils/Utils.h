@@ -99,6 +99,17 @@ namespace Utils
     /// @param viewMatrix view matrix (M.V.P. model) 
     /// @param projectionMatrix projection matrix (M.V.P. model)
     vec3 GetMouseRayDirection(float mouseX, float mouseY, float screenWidth, float screenHeight, const mat4& viewMatrix, const mat4& projectionMatrix);
+
+    /// @brief returns a random uint64_t
+    /// @return random uint64_t
+    uint64_t GetRandomID();
+
+    /// @brief takes a name and numbers it for the filesystem to avoid dupes (ex: changes sceneName.scene into sceneName_001.scene if fileName already exists in the directory)
+    /// @param originalName the original name of the file
+    /// @param ext extensione of the file
+    /// @param directory the User directory to search
+    /// @return the new name for the file (only the name, not the exstension)
+    std::string GetFileIncrementalName(const std::string& originalName, const std::string& ext, const std::string& directory);
 }
 
 namespace glm 

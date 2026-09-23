@@ -60,5 +60,5 @@ Model* PrimitiveFactory::CreateCubeModel()
     rootNode.name = "PrimitiveAssembly";
     rootNode.localTransform = glm::mat4(1.0f);
     rootNode.meshIndices.push_back(0);
-    return new Model("Procedural", "Cube", meshes, rootNode);
+    return new Model("Procedural", "Primitive_Cube", meshes, rootNode);
 }

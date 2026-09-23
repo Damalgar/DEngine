@@ -11,7 +11,8 @@ inline FileSystemPref fileSystemPref;
 
 struct ScenePref
 {
-    ImVec2 buttonSize = ImVec2(75, 75);
+    ImVec2 squareButtonSize = ImVec2(75, 75);
+    ImVec2 switchButtonSize = ImVec2(40, 40);
 };
 inline ScenePref scenePref;
 

@@ -35,7 +35,8 @@ void UIInspector::DrawShader()
     static TextEditor vertexEditor;
     static TextEditor fragmentEditor;
     static bool editorsInitialized = false;
-    static Shader* currentlyEditingShader = nullptr; 
+    static Shader* currentlyEditingShader = nullptr;
+    static std::string name = "";
 
     if (!editorsInitialized)
     {
@@ -60,9 +61,10 @@ void UIInspector::DrawShader()
         vertexEditor.SetText(shader->GetVertexCode());
         fragmentEditor.SetText(shader->GetFragmentCode());
         currentlyEditingShader = shader;
+        name = shader->GetName();
     }
 
-    if (DrawButtonColored("Compile & Save (Ctrl+S)", BUTTON_COLORS::POSITIVE))
+    if (DrawButtonColored("Reload", BUTTON_COLORS::GREEN))
     {
         shader->SetVertexCode(vertexEditor.GetText());
         shader->SetFragmentCode(fragmentEditor.GetText());
@@ -93,6 +95,28 @@ void UIInspector::DrawShader()
             Console::LogError("Shader compilation failed. See logs for details.", LOG_CATEGORY::ASSETMANAGER);
     }
 
+    ImGui::SameLine();
+
+    if (DrawStringOnEnter("", name, "Shader name"))
+    {
+        if (name == "DefaultShader")
+        {
+            name = shader->GetName();
+            NotificationSystem::Show("Can't rename a shader into DefaultShader", TOAST_WARNING);
+        }
+        else if (name == "")
+        {
+            name = shader->GetName();
+            NotificationSystem::Show("Can't give an empty name to a shader", TOAST_WARNING);
+        }
+        else if (FileSystem::AssetAlreadyExists(name, ".shader", "Shaders"))
+        {
+            name = shader->GetName();
+            NotificationSystem::Show("A shader with that name already exists", TOAST_WARNING);
+        } else
+            AssetManager::RenameShader(shader->GetName(), name);
+    }
+
     if (ImGui::BeginTabBar("InspectorShaderTabs"))
     {
         if (ImGui::BeginTabItem("Vertex"))
@@ -118,10 +142,42 @@ void UIInspector::DrawTexture()
 
 void UIInspector::DrawMaterial()
 {
+    static Material* currentlyEditingMaterial = nullptr;
+    static std::string name = "";
+    static int a = 0;
+    a++;
+    a%=100;
+
     Material* selectedMaterial = SelectionManager::GetAsMaterial();
 
     if (selectedMaterial == nullptr)
         return;
+
+    if (selectedMaterial != currentlyEditingMaterial)
+    {
+        currentlyEditingMaterial = selectedMaterial;
+        name = selectedMaterial->GetName();
+    }
+
+    if (DrawStringOnEnter("", name, "Material name"))
+    {
+        if (name == "DefaultMaterial")
+        {
+            name = selectedMaterial->GetName();
+            NotificationSystem::Show("Can't rename a material into DefaultMaterial", TOAST_WARNING);
+        }
+        else if (name == "")
+        {
+            name = selectedMaterial->GetName();
+            NotificationSystem::Show("Can't give an empty name to a material", TOAST_WARNING);
+        }
+        else if (FileSystem::AssetAlreadyExists(name, ".mat", "Materials"))
+        {
+            name = selectedMaterial->GetName();
+            NotificationSystem::Show("A material with that name already exists", TOAST_WARNING);
+        } else
+            AssetManager::RenameMaterial(selectedMaterial->GetName(), name);
+    }
 
     float shininess = selectedMaterial->GetShininess();
     if (DrawHybridFloat("Shininess", &shininess, 2, 2048, "%.1f", false, 1, ImGuiSliderFlags_Logarithmic))
@@ -129,7 +185,13 @@ void UIInspector::DrawMaterial()
 
     vec4 tintColor = selectedMaterial->GetTintColor();
     if (ImGui::ColorEdit4("tint", &tintColor.x))
-        selectedMaterial->SetTintColor(tintColor); 
+        selectedMaterial->SetTintColor(tintColor);
+
+
+    bool usePlainColor = selectedMaterial->GetUsePlainColor();
+    DrawToggleSwitch("Plain color", &usePlainColor);
+    if (usePlainColor != selectedMaterial->GetUsePlainColor())
+        selectedMaterial->SetUsePlainColor(usePlainColor);
 
     Texture* colorMap = selectedMaterial->GetColorMap();
     std::string colorMapName = colorMap ? colorMap->GetName() : "None";
@@ -212,10 +274,7 @@ void UIInspector::DrawSceneObject()
 
     ImGui::SameLine();
 
-    char nameBuf[256];
-    strcpy(nameBuf, selectedSceneObject->name.c_str());
-    if (ImGui::InputText("##Name", nameBuf, sizeof(nameBuf)))
-        selectedSceneObject->name = nameBuf;
+    DrawStringOnEnter("", selectedSceneObject->name, "Scene Object name");
 
     if (active != selectedSceneObject->IsActive())
         selectedSceneObject->SetIsActive(active);

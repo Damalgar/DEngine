@@ -91,8 +91,16 @@ uniform Material material;
 uniform sampler2D colorMap;
 uniform sampler2D specularMap;
 
+uniform bool usePlainColor;
+
 void main()
 {
+    if (usePlainColor)
+    {
+        FragColor = material.tintColor;
+        return;
+    }
+
     //===LIGHTNING===
 
     //variables
@@ -201,6 +209,13 @@ void main()
     {
         GLuint uniformID = glGetUniformLocation(m_ID, uniformName.c_str());
         glUniform1i(uniformID, value);
+    }
+
+    void SetBool(std::string uniformName, bool value)
+    {
+        GLuint uniformID = glGetUniformLocation(m_ID, uniformName.c_str());
+        //OpenGL doesn't have glUniform1b, so we make sure to pass either 1 or 0
+        glUniform1i(uniformID, value == true ? 1 : 0);
     }
 
     void SetFloat(std::string uniformName, float value)

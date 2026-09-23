@@ -3,6 +3,7 @@
 #include "Core/TagManager.h"
 #include "Graphics/PrimitiveFactory.h"
 #include "IO/Console.h"
+#include <fstream>
 
 Scene::Scene(std::string name)
 {
@@ -229,5 +230,47 @@ void Scene::OnTagDeleted(const std::string& tag)
             continue;
 
         obj->SetTag("Default");
+    }
+}
+
+bool Scene::SavePreset(SceneObject* rootObj, const std::string& name)
+{
+    return AssetManager::CreateNewPreset(rootObj, name);
+}
+
+SceneObject* Scene::GetSceneObjectByID(uint64_t ID)
+{
+    for (SceneObject* obj : m_sceneObjects)
+    {
+        if (obj->GetID() == ID)
+            return obj;
+    }
+    return nullptr;
+}
+
+SceneObject* Scene::InstantiatePreset(const std::string& name, SceneObject* targetMountPoint)
+{
+    return AssetManager::InstantiatePreset(name, targetMountPoint);
+}
+
+void Scene::OnModelDeleted(Model* model)
+{
+    for (SceneObject* obj: m_sceneObjects)
+    {
+        MeshRenderer* renderer = obj->GetComponent<MeshRenderer>();
+        if (renderer && renderer->GetModel() == model)
+            renderer->SetModel(nullptr);
+    }
+}
+
+void Scene::OnMaterialDeleted(Material* mat)
+{
+    Material* defMat = AssetManager::GetMaterial("DefaultMaterial");
+    
+    for (SceneObject* obj: m_sceneObjects)
+    {
+        MeshRenderer* renderer = obj->GetComponent<MeshRenderer>();
+        if (renderer && renderer->GetMaterial() == mat)
+            renderer->SetMaterial(defMat);
     }
 }

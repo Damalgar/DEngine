@@ -29,6 +29,7 @@ void Material::Apply()
 
     m_shader->SetFloat("material.shininess", m_shininess);
     m_shader->SetVec4("material.tintColor", m_tintColor);
+    m_shader->SetBool("usePlainColor", m_usePlainColor);
 
     if (m_colorMap)
     {
@@ -56,6 +57,7 @@ void Material::FromJson(const json& j)
     m_name = j.contains("name") ? j["name"].get<std::string>() : "Unknown Material";
     m_shininess = j.contains("shininess") ? j["shininess"].get<float>() : 0.0f;
     m_tintColor = j.contains("tintColor") ? j["tintColor"].get<vec4>() : vec4(1.0f);
+    m_usePlainColor = j.contains("usePlainColor") ? j["usePlainColor"].get<bool>() : false;
 
     std::string colorMapName = j.value("colorMap", "");
     if (!colorMapName.empty())
@@ -82,5 +84,6 @@ json Material::ToJson() const
     j["shininess"] = m_shininess;
     j["tintColor"] = m_tintColor;
     j["shader"] = m_shader ? m_shader->GetName() : "DefaultShader";
+    j["usePlainColor"] = m_usePlainColor;
     return j;
 }

@@ -15,11 +15,9 @@ void SelectionManager::Deselect()
 
 void SelectionManager::Select(SceneObject* obj)
 {
+    Deselect();
     if (!obj)
-    {
-        Deselect();
         return;
-    }
 
     m_selectedType = type::SCENE_OBJECT;
     m_data = obj;
@@ -27,11 +25,9 @@ void SelectionManager::Select(SceneObject* obj)
 
 void SelectionManager::Select(Material* mat)
 {
+    Deselect();
     if (!mat)
-    {
-        Deselect();
         return;
-    }
 
     m_selectedType = type::MATERIAL;
     m_data = mat;
@@ -39,11 +35,9 @@ void SelectionManager::Select(Material* mat)
 
 void SelectionManager::Select(Texture* text)
 {
+    Deselect();
     if (!text)
-    {
-        Deselect();
         return;
-    }
 
     m_selectedType = type::TEXTURE;
     m_data = text;
@@ -51,11 +45,9 @@ void SelectionManager::Select(Texture* text)
 
 void SelectionManager::Select(Shader* shader)
 {
+    Deselect();
     if (!shader)
-    {
-        Deselect();
         return;
-    }
 
     m_selectedType = type::SHADER;
     m_data = shader;

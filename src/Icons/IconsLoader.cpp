@@ -21,6 +21,11 @@ void IconsLoader::LoadIcons(GLFWwindow* window)
     LoadTextureFromMemory(InfoIcon_png, InfoIcon_png_len, &infoIconText);
     LoadTextureFromMemory(WarningIcon_png, WarningIcon_png_len, &warningIconText);
     LoadTextureFromMemory(ErrorIcon_png, ErrorIcon_png_len, &errorIconText);
+    LoadTextureFromMemory(localGizmosIcon_png, localGizmosIcon_png_len, &localGizmosIconText);
+    LoadTextureFromMemory(worldGizmosIcon_png, worldGizmosIcon_png_len, &worldGizmosIconText);
+    LoadTextureFromMemory(originPivotIcon_png, originPivotIcon_png_len, &originPivotIconText);
+    LoadTextureFromMemory(boundingBoxPivotIcon_png, boundingBoxPivotIcon_png_len, &boundingBoxPivotIconText);
+    LoadTextureFromMemory(prefabIcon_png, prefabIcon_png_len, &prefabIconText);
     //LoadAppIcon(window);
 }
 

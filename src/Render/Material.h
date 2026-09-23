@@ -16,6 +16,7 @@ class Material : public ISerializable {
     float GetShininess() const { return m_shininess; }
     vec4 GetTintColor() const { return m_tintColor; }
     std::string GetName() const { return m_name; }
+    bool GetUsePlainColor() const { return m_usePlainColor; }
 
     void SetColorMap(Texture* texture) { m_colorMap = texture; }
     void SetSpecularMap(Texture* texture) { m_specularMap = texture; }
@@ -23,6 +24,7 @@ class Material : public ISerializable {
     void SetTintColor(const vec4 tintColor) { m_tintColor = tintColor; }
     void SetShininess(const float value) { m_shininess = value; }
     void SetShader(Shader* shader) { m_shader = shader; }
+    void SetUsePlainColor(bool value) { m_usePlainColor = value;}
 
     void Apply();
     json ToJson() const override;
@@ -37,6 +39,7 @@ class Material : public ISerializable {
     bool m_isDirty = false;
     std::string m_name;
 
+    bool m_usePlainColor = false;
     float m_shininess = 0;
     vec4 m_tintColor;
 };

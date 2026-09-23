@@ -5,6 +5,9 @@
 #include "Physics/BoundingBox.h"
 #include "Core/SceneManager.h"
 #include "Core/SceneObject.h"
+#include <random>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace Utils
 {
@@ -115,6 +118,8 @@ namespace Utils
         debugShader->SetMat4("modelMatrix", modelMatrix);
         debugShader->SetMat4("viewMatrix", viewMatrix);
         debugShader->SetMat4("projectionMatrix", projectionMatrix);
+
+        debugShader->SetInt("usePlainColor", 1);
         debugShader->SetVec4("material.tintColor", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
         glLineWidth(7.0f);
@@ -201,7 +206,7 @@ namespace Utils
         debugShader->SetMat4("viewMatrix", viewMatrix);
         debugShader->SetMat4("projectionMatrix", projectionMatrix);
         
-        debugShader->SetInt("material.hasColorMap", 0);
+        debugShader->SetInt("usePlainColor", 1);
         debugShader->SetVec4("material.tintColor", color);
         
         glLineWidth(7.0f);
@@ -288,5 +293,30 @@ namespace Utils
         vec4 rayWorld = glm::inverse(viewMatrix) * rayEye;
 
         return glm::normalize(glm::vec3(rayWorld.x, rayWorld.y, rayWorld.z));
+    }
+
+    uint64_t GetRandomID()
+    {
+        std::random_device rd;
+        std::mt19937_64 eng(rd());
+        std::uniform_int_distribution<uint64_t> distr;
+
+        return distr(eng);
+    }
+
+    std::string GetFileIncrementalName(const std::string& originalName, const std::string& extension, const std::string& folder)
+    {
+        fs::path userFolder = fs::path(FileSystem::GetAssetPath("User")) / folder;
+        fs::path finalPath = userFolder / (originalName + extension);
+        int counter = 0;
+        while (fs::exists(finalPath))
+        {
+            counter++;
+            std::ostringstream oss;
+            oss << originalName << "_" << std::setw(3) << std::setfill('0') << counter;
+            
+            finalPath = userFolder / (oss.str() + extension);
+        }
+        return finalPath.filename().stem().string();
     }
 } //Namespace Utils

@@ -55,5 +55,10 @@ class BoundingBox {
         }
 
         return globalBox;
-    } 
+    }
+
+    vec3 GetCenter() const
+    {
+        return (min + max) * 0.5f;
+    }
 };

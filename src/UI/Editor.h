@@ -32,7 +32,10 @@ class Editor
     
     bool m_addEmptyObject = false;
     bool m_addCubeObject = false;
-    
+
+    bool m_gizmosLocal = false;
+    bool m_originPivoting = false;
+
     SceneObject* m_addObjectParent = nullptr;
 
     SceneObject* m_draggedNodeToMove = nullptr;

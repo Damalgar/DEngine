@@ -5,6 +5,7 @@
 #include "imgui/imgui.h"
 #include "Tools/drawUtils.h"
 #include "Icons/IconsLoader.h"
+#include "Fonts/FontsLoader.h"
 
 void UIConsole::Draw()
 {
@@ -16,25 +17,27 @@ void UIConsole::Draw()
     textFilter.Draw("##ConsoleFilter", width);
 
     ImGui::SameLine();
-    if (DrawButtonImage(IconsLoader::infoIconText, filterButtonImageSize, BUTTON_COLORS::UTILITY, "info", true, showInfo, filterButtonSize))
+    if (DrawButtonImage(IconsLoader::infoIconText, filterButtonImageSize, BUTTON_COLORS::BLUE, "info", true, showInfo, filterButtonSize))
         showInfo = !showInfo;
 
     ImGui::SameLine();
-    if (DrawButtonImage(IconsLoader::warningIconText, filterButtonImageSize, BUTTON_COLORS::UTILITY, "warnings", true, showWarn, filterButtonSize))
+    if (DrawButtonImage(IconsLoader::warningIconText, filterButtonImageSize, BUTTON_COLORS::BLUE, "warnings", true, showWarn, filterButtonSize))
         showWarn = !showWarn;
 
     ImGui::SameLine();
-    if (DrawButtonImage(IconsLoader::errorIconText, filterButtonImageSize, BUTTON_COLORS::UTILITY, "errors", true, showErr, filterButtonSize))
+    if (DrawButtonImage(IconsLoader::errorIconText, filterButtonImageSize, BUTTON_COLORS::BLUE, "errors", true, showErr, filterButtonSize))
         showErr = !showErr;
 
     SpacingH(10);
     ImGui::SameLine();
-    if (DrawButtonColored("Clear", BUTTON_COLORS::NEGATIVE))
+    if (DrawButtonColored("Clear", BUTTON_COLORS::RED))
         Console::Clear();
 
     ImGui::BeginChild("LogsArea", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     const std::vector<LogMessage>& logs = Console::GetLogs();
+
+    FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
 
     for (const LogMessage& log : logs)
     {
@@ -70,5 +73,6 @@ void UIConsole::Draw()
         ImGui::PopStyleColor();
     }
 
+    FontsLoader::PopFont();
     ImGui::EndChild();
 }

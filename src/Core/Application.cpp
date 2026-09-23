@@ -18,6 +18,13 @@ Application::Application()
     Instance = this;
 }
 
+Application::~Application()
+{
+    delete m_camera;
+    delete m_sceneBuffer;
+    delete m_editor;
+}
+
 int Application::Init(int argc, char* argv0)
 {
     if (!glfwInit())
@@ -53,6 +60,8 @@ int Application::Init(int argc, char* argv0)
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     InputsManager::Init(m_window);
     AssetManager::Init();
@@ -85,8 +94,7 @@ void Application::MainLoop()
     }
 
     AssetManager::SaveAll();
-    SceneManager::GetActiveScene()->SetName("Autosave");
-    SceneManager::SaveCurrentScene();
+    SceneManager::SaveCurrentSceneAutosave();
 
     delete SceneManager::GetActiveScene();
     AssetManager::Clear();
@@ -190,6 +198,10 @@ void Application::SetupImGuiStyle()
     style.FramePadding      = ImVec2(8, 6);
     style.FrameBorderSize   = 1.0f;
     style.WindowBorderSize  = 1.0f;
+
+    float xscale, yscale;
+    glfwGetWindowContentScale(m_window, &xscale, &yscale);
+    style.ScaleAllSizes(xscale);
 
     // --- PALETTE DEEP SLATE ---
     

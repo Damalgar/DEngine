@@ -14,6 +14,8 @@
 
 void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
 {
+    ProcessOperations();
+
     if (ImGui::BeginTabBar("AssetsTabs"))
     {
         if (ImGui::BeginTabItem("Models"))
@@ -77,6 +79,16 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                                     }
                                 );
                             }
+
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Delete"))
+                                {
+                                    m_modelToDelete = entry;
+                                }
+                                ImGui::EndPopup();
+                            }
+
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
                         currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
@@ -150,6 +162,15 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                                 SelectionManager::Select(AssetManager::GetTexture(filename));
                             }
 
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Delete"))
+                                {
+                                    m_textureToDelete = entry;
+                                }
+                                ImGui::EndPopup();
+                            }
+
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
 
@@ -209,6 +230,16 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             {
                                 SelectionManager::Select(AssetManager::GetShader(filename));
                             }
+
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Delete"))
+                                {
+                                    m_shaderToDelete = entry;
+                                }
+                                ImGui::EndPopup();
+                            }
+
                         if (filename == "DefaultShader")
                             ImGui::EndDisabled();
                             TextElided(filename, fileSystemPref.cellSize);
@@ -270,6 +301,16 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             {
                                 SelectionManager::Select(AssetManager::GetMaterial(filename));
                             }
+
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Delete"))
+                                {
+                                    m_materialToDelete = entry;
+                                }
+                                ImGui::EndPopup();
+                            }
+
                         if (filename == "DefaultMaterial")
                             ImGui::EndDisabled();
                             TextElided(filename, fileSystemPref.cellSize);
@@ -332,6 +373,74 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
                             {
                                 SceneManager::LoadScene(entry.path().filename().stem().string());
                             }
+
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Delete"))
+                                {
+                                    m_sceneToDelete = entry;
+                                }
+                                ImGui::EndPopup();
+                            }
+
+                            TextElided(filename, fileSystemPref.cellSize);
+                        ImGui::EndGroup();
+                        currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
+                        if (currentX + fileSystemPref.cellSize > availableWidth)
+                            currentX = 0;
+
+                        ImGui::PopID();
+                    }
+                }
+            }
+
+            FontsLoader::PopFont();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Presets"))
+        {
+            ImGui::Spacing();
+
+            FontsLoader::PushFont(FontsLoader::FONTS::ROBOTO_SMALL);
+
+            fs::path scenesPath = fs::path(FileSystem::GetAssetPath("User", "Presets"));
+            if (fs::exists(scenesPath))
+            {
+                float availableWidth = ImGui::GetContentRegionAvail().x - (fileSystemPref.borderMargins * 2);
+                float currentX = 0.0f;
+                ImTextureID iconID = (ImTextureID)(intptr_t)IconsLoader::prefabIconText;
+
+                for (const auto& entry : fs::directory_iterator(scenesPath))
+                {
+                    if (entry.is_regular_file() && entry.path().extension() == ".preset")
+                    {
+                        std::string filename = entry.path().stem().string();
+                        ImGui::PushID(entry.path().string().c_str());
+
+                        if (currentX == 0.0f)
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + fileSystemPref.borderMargins);
+                        else
+                            ImGui::SameLine(0.0f, fileSystemPref.cellSpacing);
+
+                        ImGui::BeginGroup();
+                            if (DrawButtonImage(iconID, ImVec2(fileSystemPref.cellSize, fileSystemPref.cellSize), 
+                                    BUTTON_COLORS::NONE, "Preset"))
+                            {
+                                Scene* activeScene = SceneManager::GetActiveScene();
+                                if (activeScene)
+                                    activeScene->InstantiatePreset(entry.path().filename().stem().string());
+                            }
+
+                            if (ImGui::BeginPopupContextItem())
+                            {
+                                if (ImGui::MenuItem("Delete"))
+                                {
+                                    m_presetToDelete = entry;
+                                }
+                                ImGui::EndPopup();
+                            }
+
                             TextElided(filename, fileSystemPref.cellSize);
                         ImGui::EndGroup();
                         currentX += fileSystemPref.cellSize + fileSystemPref.cellSpacing;
@@ -347,5 +456,64 @@ void UIFileSystem::Draw(SceneObject* m_selectedSceneObj)
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
+    }
+}
+
+void UIFileSystem::ProcessOperations()
+{
+    if (m_modelToDelete != "")
+    {
+        std::string filename = m_modelToDelete.filename().stem().string();
+        m_modelToDelete = "";
+        AssetManager::DeleteModel(filename);
+    }
+
+    if (m_textureToDelete != "")
+    {
+        std::string filename = m_textureToDelete.filename().stem().string();
+        m_textureToDelete = "";
+        Texture* selectedText = SelectionManager::GetAsTexture();
+        if (selectedText && selectedText == AssetManager::GetTexture(filename))
+            SelectionManager::Deselect();
+
+        AssetManager::DeleteTexture(filename);
+    }
+
+    if (m_shaderToDelete != "")
+    {
+        std::string filename = m_shaderToDelete.filename().stem().string();
+        m_shaderToDelete = "";
+        Shader* selectedShader = SelectionManager::GetAsShader();
+        if (selectedShader && selectedShader == AssetManager::GetShader(filename))
+            SelectionManager::Deselect();
+
+        AssetManager::DeleteShader(filename);
+    }
+
+    if (m_materialToDelete != "")
+    {
+        std::string filename = m_materialToDelete.filename().stem().string();
+        m_materialToDelete = "";
+        Material* selectedMat = SelectionManager::GetAsMaterial();
+        if (selectedMat && selectedMat == AssetManager::GetMaterial(filename))
+            SelectionManager::Deselect();
+
+        AssetManager::DeleteMaterial(filename);
+    }
+
+    if (m_sceneToDelete != "")
+    {
+        std::string filename = m_sceneToDelete.filename().stem().string();
+        m_sceneToDelete = "";
+
+        FileSystem::DeleteAsset(filename, ".scene", "Scenes");
+    }
+
+    if (m_presetToDelete != "")
+    {
+        std::string filename = m_presetToDelete.filename().stem().string();
+        m_presetToDelete = "";
+
+        FileSystem::DeleteAsset(filename, ".preset", "Presets");
     }
 }

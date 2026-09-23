@@ -126,7 +126,7 @@ void TelemetryViewer::OnGuiDraw()
         case TELEMETRY_MODE::THRESHOLD: OnGuiDrawThresholdMode(); break;
     }
 
-    if(!m_targetParameter.empty() && m_telemetryMode != TELEMETRY_MODE::SWITCH && DrawButtonColored("Auto-Range", BUTTON_COLORS::UTILITY))
+    if(!m_targetParameter.empty() && m_telemetryMode != TELEMETRY_MODE::SWITCH && DrawButtonColored("Auto-Range", BUTTON_COLORS::BLUE))
         SetSuggestedValues();
 }
 

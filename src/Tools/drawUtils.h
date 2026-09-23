@@ -1,7 +1,5 @@
 #pragma once
 #include "imgui.h"
-#include "../Vendor/imgui/backends/imgui_impl_glfw.h"
-#include "../Vendor/imgui/backends/imgui_impl_opengl3.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -22,14 +20,33 @@ struct ComboEntry {
 
 enum class BUTTON_COLORS
 {
-    POSITIVE = 0,
-    NEGATIVE,
-    WARNING,
-    UTILITY,
+    GREEN = 0,
+    RED,
+    ORANGE,
+    BLUE,
     GREY,
+    INDIGO,
     INVISIBLE,
     NONE
 };
+
+enum class COLORS
+{
+    GREEN = 0,
+    GREY
+};
+
+inline ImVec4 GetColorValue(COLORS color)
+{
+    using C = COLORS;
+    switch (color)
+    {
+    case C::GREEN: return ImVec4(0.2f, 0.8f, 0.2f, 1.0f);
+    case C::GREY: return ImVec4(0.20f, 0.22f, 0.24f, 1.0f);
+    }
+
+    return ImVec4(1,1,1,1);
+}
 
 inline void ElideString(std::string& stringToElide, int charactersInclusive = 24)
 {
@@ -334,6 +351,44 @@ inline bool DrawFieldString(const char* label, std::string& str, int maxLength, 
     return returnEdit ? edited : valueChanged;
 };
 
+inline bool DrawStringOnEnter(const char* label, std::string& str, const char* hint = nullptr, int maxLength = 256, bool sameLine = true, int invSize = 1)
+{
+    bool valueChanged = false;
+    
+    ImGui::PushID(label);
+    
+    if (!sameLine) ImGui::Text("%s", label);
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / invSize);
+    
+    std::vector<char> buffer(maxLength, '\0');
+    snprintf(buffer.data(), buffer.size(), "%s", str.c_str());
+    
+    ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
+    
+    bool enterPressed = false;
+    
+    if (hint != nullptr && hint[0] != '\0')
+        enterPressed = ImGui::InputTextWithHint("##input", hint, buffer.data(), buffer.size(), flags);
+    else
+        enterPressed = ImGui::InputText("##input", buffer.data(), buffer.size(), flags);
+
+    if (enterPressed || ImGui::IsItemDeactivatedAfterEdit())
+    {
+        str = buffer.data();
+        valueChanged = true;
+    }
+
+    if (sameLine)
+    {
+        ImGui::SameLine();
+        ImGui::Text("%s", label);
+    }
+
+    ImGui::PopID();
+
+    return valueChanged;
+}
+
 inline bool DrawFieldStringPlaceHolder(const char* label, std::string& str, int maxLength, bool returnEdit = false, int invSize = 1) {
     bool edited = false;
     bool valueChanged = false;
@@ -442,7 +497,7 @@ inline bool DrawHybridFloat(const char* label, float* variable, float v_min, flo
     if (outDeactivated) *outDeactivated = false;
 
     ImGui::PushID(label);
-    if (label != "")
+    if (label != nullptr && label[0] != '\0')
         ImGui::Text("%s", label);
 
     float totalWidth = ImGui::GetContentRegionAvail().x / invSize;
@@ -533,7 +588,7 @@ inline bool DrawFieldFloat2(const char* label, float* v1, float* v2, float v_min
 }
 
 inline bool DrawFloatCoords3(const char* mainLabel, float* v, float increment = 1.0f, float v_min = std::numeric_limits<float>::lowest(), float v_max = std::numeric_limits<float>::max(),
-    const char* format = "%.2f", bool returnEdit = false, float margin = 20 ,const char* labX = "X", const char* labY = "Y", const char* labZ = "Z") 
+    const char* format = "%.2f", bool colorCoordinates = true, bool returnEdit = false, float margin = 20 ,const char* labX = "X", const char* labY = "Y", const char* labZ = "Z") 
 {
     bool edited = false;
     bool valueChanged = false;
@@ -559,7 +614,20 @@ inline bool DrawFloatCoords3(const char* mainLabel, float* v, float increment = 
         if (i > 0) ImGui::SameLine(0, spaceX);
         
         ImGui::AlignTextToFramePadding(); 
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "%s", labels[i]);
+        if (colorCoordinates)
+        {
+            ImVec4 color = ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+            if (i==0)
+                color = ImVec4(0.7f, 0.1, 0.1f, 1.0f);
+            else if (i==1)
+                color = ImVec4(0.1f, 0.7f, 0.1f, 1.0f);
+            else
+                color = ImVec4(0.1f, 0.1f, 0.7f, 1.0f);
+                
+            ImGui::TextColored(color, "%s", labels[i]);
+        } else {
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "%s", labels[i]);   
+        }
         ImGui::SameLine(0, spaceX);
         
         ImGui::PushID(i);
@@ -593,7 +661,6 @@ inline void SpacingH(float px)
 
 inline void SpacingV(float px)
 {
-    ImGui::SameLine();
     ImGui::Dummy({0, px});
 }
 
@@ -637,6 +704,8 @@ inline bool DrawFieldTime(float* variable, float v_min, float v_max, int invSize
     float totalWidth = ImGui::GetContentRegionAvail().x / invSize;
     float fieldWidth = (totalWidth / 4.0f) - 6.0f;
 
+    ImGui::PushID(variable);
+
     ImGui::SetNextItemWidth(fieldWidth);
     if (ImGui::InputInt("hours", &h, 0)) valueChanged = true;
     if (ImGui::IsItemDeactivatedAfterEdit()) edited = true;
@@ -658,6 +727,8 @@ inline bool DrawFieldTime(float* variable, float v_min, float v_max, int invSize
     ImGui::SetNextItemWidth(fieldWidth);
     if (ImGui::InputInt("ms", &ms, 0)) valueChanged = true;
     if (ImGui::IsItemDeactivatedAfterEdit()) edited = true;
+
+    ImGui::PopID();
 
     if (valueChanged)
     {
@@ -858,11 +929,7 @@ inline void DrawMasterVUMeter(ImVec2 pos, ImVec2 size, float currentMasterLevel)
 inline void SetTooltip(const char* text, bool onHovered = true)
 {
     if (!onHovered || ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::SetTooltip("Automation view");
-        ImGui::EndTooltip();
-    }
+        ImGui::SetTooltip("%s", text);
 }
 
 inline void SetButtonColorsGrey()
@@ -877,26 +944,38 @@ inline void PopButtonColorsGrey()
     ImGui::PopStyleColor(3);
 }
 
-inline void SetButtonColorsPositive()
+inline void SetButtonColorsGREEN()
 {
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.3f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.9f, 0.4f, 1.0f));
 }
 
-inline void PopButtonColorsPositive()
+inline void PopButtonColorsGREEN()
 {
     ImGui::PopStyleColor(3);
 }
 
-inline void SetButtonColorsNegative()
+inline void SetButtonColorsIndigo()
+{
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.39f, 0.40f, 0.95f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.51f, 0.55f, 0.97f, 1.00f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.31f, 0.27f, 0.90f, 1.00f));
+}
+
+inline void PopButtonColorsIndigo()
+{
+    ImGui::PopStyleColor(3);
+}
+
+inline void SetButtonColorsRED()
 {
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.0f, 0.0f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8f, 0.0f, 0.0f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.0f, 0.0f, 1.0f));
 }
 
-inline void PopButtonColorsNegative()
+inline void PopButtonColorsRED()
 {
     ImGui::PopStyleColor(3);
 }
@@ -913,14 +992,14 @@ inline void PopButtonColorsWarning()
     ImGui::PopStyleColor(3);
 }
 
-inline void SetButtonColorsUtility()
+inline void SetButtonColorsBLUE()
 {
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.6f, 1.0f, 1.0f));
 }
 
-inline void PopButtonColorsUtility()
+inline void PopButtonColorsBLUE()
 {
     ImGui::PopStyleColor(3);
 }
@@ -947,11 +1026,12 @@ inline void PushButtonColor(BUTTON_COLORS color)
     using BC = BUTTON_COLORS;
     switch (color)
     {
-        case BC::POSITIVE: SetButtonColorsPositive(); break;
-        case BC::NEGATIVE: SetButtonColorsNegative(); break;
-        case BC::WARNING: SetButtonColorsWarning(); break;
-        case BC::UTILITY: SetButtonColorsUtility(); break;
+        case BC::GREEN: SetButtonColorsGREEN(); break;
+        case BC::RED: SetButtonColorsRED(); break;
+        case BC::ORANGE: SetButtonColorsWarning(); break;
+        case BC::BLUE: SetButtonColorsBLUE(); break;
         case BC::GREY: SetButtonColorsGrey(); break;
+        case BC::INDIGO: SetButtonColorsIndigo(); break;
         case BC::INVISIBLE: SetButtonColorsTransparent(); break;
         case BC::NONE: return;
     }
@@ -1009,6 +1089,100 @@ inline bool DrawButtonColored(const char* label, BUTTON_COLORS color, bool color
     return pressed;
 }
 
+inline bool DrawToggleSwitch(const char* label, bool* value, COLORS onColor = COLORS::GREEN, COLORS offColor = COLORS::GREY, bool sameLineText = true)
+{
+    bool changed = false;
+    ImGui::PushID(label);
+ 
+    if (!sameLineText && label != nullptr && label[0] != '\0')
+        ImGui::Text("%s", label);
+ 
+    float height = ImGui::GetFrameHeight();
+    float width = height * 1.8f;
+    float radius = height * 0.5f;
+ 
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+ 
+    ImGui::InvisibleButton("##toggle", ImVec2(width, height));
+    if (ImGui::IsItemClicked())
+    {
+        *value = !*value;
+        changed = true;
+    }
+ 
+    ImGuiStorage* storage = ImGui::GetStateStorage();
+    ImGuiID animId = ImGui::GetID("##toggleAnim");
+    float anim = storage->GetFloat(animId, *value ? 1.0f : 0.0f);
+    float target = *value ? 1.0f : 0.0f;
+    anim = ImLerp(anim, target, ImSaturate(ImGui::GetIO().DeltaTime * 10.0f));
+    storage->SetFloat(animId, anim);
+ 
+    ImVec4 bgColorF = ImLerp(GetColorValue(offColor), GetColorValue(onColor), anim);
+ 
+    if (ImGui::IsItemHovered())
+    {
+        bgColorF.x = std::min(bgColorF.x + 0.05f, 1.0f);
+        bgColorF.y = std::min(bgColorF.y + 0.05f, 1.0f);
+        bgColorF.z = std::min(bgColorF.z + 0.05f, 1.0f);
+    }
+ 
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    drawList->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + height), ImGui::ColorConvertFloat4ToU32(bgColorF), radius);
+ 
+    float knobX = pos.x + radius + (width - height) * anim;
+    float knobY = pos.y + radius;
+    drawList->AddCircleFilled(ImVec2(knobX, knobY), radius - 2.0f, IM_COL32(240, 240, 240, 255));
+ 
+    if (sameLineText && label != nullptr && label[0] != '\0')
+    {
+        ImGui::SameLine();
+        ImGui::Text("%s", label);
+    }
+ 
+    ImGui::PopID();
+    return changed;
+}
+
+inline void DrawProgressBar(const char* label, float fraction, float invSize = 1.0f, float height = 0.0f,
+    COLORS color = COLORS::GREEN,
+    float warning_treshold = 9999999.0f, std::string warning_title = "", std::string warning_text = "")
+{
+    ImGui::PushID(label);
+ 
+    if (label != nullptr && label[0] != '\0')
+        ImGui::Text("%s", label);
+ 
+    float pct = fraction;
+    if (pct < 0.0f) pct = 0.0f;
+    if (pct > 1.0f) pct = 1.0f;
+ 
+    char overlay[16];
+    snprintf(overlay, sizeof(overlay), "%.0f%%", pct * 100.0f);
+ 
+    float width = ImGui::GetContentRegionAvail().x / invSize;
+ 
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, GetColorValue(color));
+    ImGui::ProgressBar(pct, ImVec2(width, height), overlay);
+    ImGui::PopStyleColor();
+ 
+    if (warning_treshold != 9999999.0f && (pct * 100.0f) > warning_treshold)
+    {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), "(!)");
+ 
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), "%s", warning_title.c_str());
+            ImGui::Separator();
+            ImGui::Text("%s", warning_text.c_str());
+            ImGui::EndTooltip();
+        }
+    }
+ 
+    ImGui::PopID();
+}
+
 inline bool DrawButtonImage(ImTextureID tex, ImVec2 iconSize, BUTTON_COLORS color = BUTTON_COLORS::NONE, const char* fallback = "", bool colorOnlyOnActive = false, bool value = false, ImVec2 size = ImVec2(0,0))
 {
     if (tex == (ImTextureID)0)
@@ -1055,11 +1229,86 @@ inline bool DrawButtonImage(ImTextureID tex, ImVec2 iconSize, BUTTON_COLORS colo
     return pressed;
 }
 
+inline bool DrawSwitchImages(ImTextureID leftText, ImTextureID rightText, bool* isLeftActive, ImVec2 iconSize, const char* id,
+    bool* outIsHovered = nullptr, float padding = 6.0f, float rounding = 4.0f, float inactiveIconAlpha = 0.6f)
+{
+    bool original = *isLeftActive;
+    if (outIsHovered) *outIsHovered = false;
+
+    ImGui::PushID(id);
+
+    float boxWidth  = iconSize.x + padding * 2.0f;
+    float boxHeight = iconSize.y + padding * 2.0f;
+    float dividerW  = 2.0f;
+
+    ImVec2 leftMin = ImGui::GetCursorScreenPos();
+    ImGui::InvisibleButton("##left", ImVec2(boxWidth, boxHeight));
+    bool leftHovered = ImGui::IsItemHovered();
+    bool leftHeld    = ImGui::IsItemActive();
+    if (ImGui::IsItemClicked())
+        *isLeftActive = true;
+    ImVec2 leftMax = ImGui::GetItemRectMax();
+
+    ImGui::SameLine(0.0f, dividerW);
+
+    ImVec2 rightMin = ImGui::GetCursorScreenPos();
+    ImGui::InvisibleButton("##right", ImVec2(boxWidth, boxHeight));
+    bool rightHovered = ImGui::IsItemHovered();
+    bool rightHeld    = ImGui::IsItemActive();
+    if (ImGui::IsItemClicked())
+        *isLeftActive = false;
+    ImVec2 rightMax = ImGui::GetItemRectMax();
+
+    if (outIsHovered)
+        *outIsHovered = leftHovered || rightHovered;
+
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    auto sideColor = [inactiveIconAlpha](bool isSelected, bool hovered, bool held) -> ImU32
+    {
+        if (isSelected || held) return ImGui::GetColorU32(ImGuiCol_ButtonActive);
+        if (hovered)             return ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+        return ImGui::GetColorU32(ImGuiCol_Button, inactiveIconAlpha);
+    };
+
+    ImU32 leftCol  = sideColor(*isLeftActive,  leftHovered,  leftHeld);
+    ImU32 rightCol = sideColor(!*isLeftActive, rightHovered, rightHeld);
+
+    drawList->AddRectFilled(leftMin,  leftMax,  leftCol,  rounding, ImDrawFlags_RoundCornersLeft);
+    drawList->AddRectFilled(rightMin, rightMax, rightCol, rounding, ImDrawFlags_RoundCornersRight);
+
+    drawList->AddRectFilled(ImVec2(leftMax.x, leftMin.y), ImVec2(rightMin.x, leftMax.y), ImGui::GetColorU32(ImGuiCol_Separator));
+
+    ImVec2 leftIconMin  = ImVec2(leftMin.x  + (boxWidth - iconSize.x) * 0.5f, leftMin.y  + (boxHeight - iconSize.y) * 0.5f);
+    ImVec2 rightIconMin = ImVec2(rightMin.x + (boxWidth - iconSize.x) * 0.5f, rightMin.y + (boxHeight - iconSize.y) * 0.5f);
+
+    auto sideIconAlpha = [inactiveIconAlpha](bool isSelected, bool hovered) -> unsigned char
+    {
+        if (isSelected) return 255;
+        if (hovered)     return (unsigned char)(255.0f * ((inactiveIconAlpha + 1.0f) * 0.5f));
+        return (unsigned char)(255.0f * inactiveIconAlpha);
+    };
+
+    ImU32 leftTint  = IM_COL32(255, 255, 255, sideIconAlpha(*isLeftActive,  leftHovered));
+    ImU32 rightTint = IM_COL32(255, 255, 255, sideIconAlpha(!*isLeftActive, rightHovered));
+    
+    if (leftText)
+        drawList->AddImage(leftText, leftIconMin, ImVec2(leftIconMin.x + iconSize.x, leftIconMin.y + iconSize.y), ImVec2(0,0), ImVec2(1,1), leftTint);
+    if (rightText)
+        drawList->AddImage(rightText, rightIconMin, ImVec2(rightIconMin.x + iconSize.x, rightIconMin.y + iconSize.y), ImVec2(0,0), ImVec2(1,1), rightTint);
+
+    ImGui::PopID();
+
+    return original != *isLeftActive;
+}
+
 template<typename T>
 inline bool DrawElementResearchMenu(const char* label, T& outSelected, const std::vector<ComboEntry<T>>& options,
 std::function<bool(T)> isExcluded = nullptr, BUTTON_COLORS buttonColor = BUTTON_COLORS::GREY)
 {
     bool itemSelected = false;
+
+    ImGui::PushID(label);
 
     if (DrawButtonColored(label, buttonColor))
         ImGui::OpenPopup("ElemenetResearchPopup");
@@ -1098,6 +1347,8 @@ std::function<bool(T)> isExcluded = nullptr, BUTTON_COLORS buttonColor = BUTTON_
         ImGui::EndPopup();
     }
 
+    ImGui::PopID();
+
     return itemSelected;
 }
 
@@ -1106,33 +1357,27 @@ inline bool DrawAssetSlot(const char* label, const std::string& assetName, ImTex
     bool clicked = false;
     ImGui::PushID(label);
 
-    // 1. Calcolo dello spazio e allineamento (Invertito: Slot 65%, Label 35%)
     float totalWidth = ImGui::GetContentRegionAvail().x;
     float labelWidth = totalWidth * 0.35f;
     float boxWidth = totalWidth - labelWidth;
-    float boxHeight = ImGui::GetFrameHeight(); // Altezza standard ~19px
+    float boxHeight = ImGui::GetFrameHeight();
 
-    // 2. Prepariamo le coordinate per il rettangolo dello slot (a Sinistra)
     ImVec2 p_min = ImGui::GetCursorScreenPos();
     ImVec2 p_max = ImVec2(p_min.x + boxWidth, p_min.y + boxHeight);
 
-    // 3. L'Invisible Button: Occupa esattamente lo spazio dello slot
     ImGui::InvisibleButton("##assetslot", ImVec2(boxWidth, boxHeight));
     bool isHovered = ImGui::IsItemHovered();
     clicked = ImGui::IsItemClicked();
 
-    // 4. Disegno Custom tramite ImDrawList
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     
     ImU32 bgColor = isHovered ? IM_COL32(75, 75, 75, 255) : IM_COL32(42, 42, 42, 255);
     ImU32 borderColor = IM_COL32(20, 20, 20, 255);
     float rounding = 3.0f;
 
-    // Disegniamo il background smussato e il bordo
     drawList->AddRectFilled(p_min, p_max, bgColor, rounding);
     drawList->AddRect(p_min, p_max, borderColor, rounding);
 
-    // 5. Calcolo coordinate interne per l'Icona
     float padding = 3.0f;
     float iconSize = boxHeight - (padding * 2.0f);
     
@@ -1144,25 +1389,19 @@ inline bool DrawAssetSlot(const char* label, const std::string& assetName, ImTex
     else 
         drawList->AddRect(iconMin, iconMax, IM_COL32(100, 100, 100, 255));
 
-    // 6. Calcolo PRECISO del centraggio verticale per il testo
     std::string displayText = assetName.empty() ? "None (Asset)" : assetName;
     
-    // Chiediamo a ImGui quanto è alto esattamente il testo con il font attuale
     ImVec2 textSize = ImGui::CalcTextSize(displayText.c_str());
     
-    // (Altezza Totale Slot - Altezza Testo) / 2 = Margine Y perfetto
     float textYOffset = (boxHeight - textSize.y) * 0.5f; 
     
     ImVec2 textPos = ImVec2(iconMax.x + padding + 2.0f, p_min.y + textYOffset);
 
-    // 7. Disegniamo il Testo nello slot
     drawList->PushClipRect(p_min, ImVec2(p_max.x - padding, p_max.y));
     drawList->AddText(textPos, IM_COL32(220, 220, 220, 255), displayText.c_str());
     drawList->PopClipRect();
 
-    // 8. Disegniamo l'Etichetta (Label) a Destra
     ImGui::SameLine();
-    // AlignTextToFramePadding spinge il testo leggermente giù per allinearlo ai bottoni
     ImGui::AlignTextToFramePadding(); 
     ImGui::Text("%s", label);
 
@@ -1255,4 +1494,9 @@ namespace NotificationSystem {
             activeNotifications.end()
         );
     }
+
+    inline void ShowSuccess(const std::string& message, float duration = 3.0f) { Show(message.c_str(), TOAST_SUCCESS, duration); }
+    inline void ShowWarning(const std::string& message, float duration = 3.0f) { Show(message.c_str(), TOAST_WARNING, duration); }
+    inline void ShowError(const std::string& message, float duration = 3.0f) { Show(message.c_str(), TOAST_ERROR, duration); }
+    inline void ShowInfo(const std::string& message, float duration = 3.0f) { Show(message.c_str(), TOAST_INFO, duration); }
 }

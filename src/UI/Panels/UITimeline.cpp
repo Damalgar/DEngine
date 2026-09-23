@@ -7,6 +7,7 @@
 #include "IO/Console.h"
 #include "IO/InputsManager.h"
 #include "UI/SelectionManager.h"
+#include "UI/Panels/UITags.h"
 #include "Components/TelemetryViewer.h"
 #include "Core/SceneObject.h"
 
@@ -200,95 +201,129 @@ void UITimeline::Draw()
 
 void UITimeline::DrawGraph(ImVec2 size)
 {
-    SceneObject* selectedObj = SelectionManager::GetAsSceneObject();
-    if (selectedObj == nullptr)
+    const std::unordered_set<std::string>& trackedParams = UITags::GetTrackedParameters();
+    if (trackedParams.empty())
         return;
-
-    TelemetryViewer* telemetryViewer = selectedObj->GetComponent<TelemetryViewer>();
-    if (telemetryViewer == nullptr)
-        return;
-
-    std::string parameter = telemetryViewer->GetTargetParameter();
-    const auto& values = TelemetryManager::GetValues(parameter);
-    if (values.empty())
-        return;
-    
+ 
+    std::vector<std::string> parameters(trackedParams.begin(), trackedParams.end());
+    std::sort(parameters.begin(), parameters.end());
+ 
     double plotMinX = static_cast<double>(m_viewStartFrame);
     double plotMaxX = static_cast<double>(m_viewEndFrame);
-    
+ 
     ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0.0f, 0.0f));
     ImPlot::PushStyleVar(ImPlotStyleVar_FitPadding, ImVec2(0.0f, 0.1f));
     ImPlot::PushStyleVar(ImPlotStyleVar_PlotBorderSize, 0.0f);
-
+ 
     float startCursorX = ImGui::GetCursorPosX();
     ImGui::SetCursorPosX(startCursorX + timelinePref.timelineMargin);
-    ImPlotFlags plotFlags = ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoLegend;
-    
+ 
+    ImPlotFlags plotFlags = ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect;
+    ImPlotLegendFlags legendFlags = ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal;
+ 
     if (ImPlot::BeginPlot("##TimelineGraph", size, plotFlags))
     {
         ImPlot::SetupAxisLimits(ImAxis_X1, plotMinX, plotMaxX, ImGuiCond_Always);
         ImPlot::SetupAxis(ImAxis_X1, nullptr, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxis(ImAxis_Y1, nullptr, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoDecorations);
-
+        ImPlot::SetupLegend(ImPlotLocation_South, legendFlags);
+ 
         ImPlotPlot* currentPlot = ImPlot::GetCurrentPlot();
-        if (currentPlot) 
+        if (currentPlot)
         {
             plotMinX = currentPlot->Axes[ImAxis_X1].Range.Min;
             plotMaxX = currentPlot->Axes[ImAxis_X1].Range.Max;
         }
-
-        int range = m_viewEndFrame - m_viewStartFrame;
-        if (range < 100)
+ 
+        for (const std::string& parameter : parameters)
         {
+            const auto& values = TelemetryManager::GetValues(parameter);
+            if (values.empty())
+                continue;
+ 
             ImPlotSpec spec;
-            spec.Marker = ImPlotMarker_Circle;
-            spec.MarkerSize = 4.0f;
-            spec.MarkerFillColor = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
-            spec.MarkerLineColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+            spec.LineColor = GetParameterColor(parameter);
             spec.LineWeight = 1.5f;
-
+ 
             ImPlot::PlotLine(parameter.c_str(), values.data(), static_cast<int>(values.size()), 1.0, 1.0, spec);
-        } else
-            ImPlot::PlotLine(parameter.c_str(), values.data(), static_cast<int>(values.size()), 1.0, 1.0);
-
+        }
+ 
         if (ImPlot::IsPlotHovered())
         {
             ImPlotPoint mousePos = ImPlot::GetPlotMousePos();
             int hoveredFrame = static_cast<int>(std::round(mousePos.x));
             int valIndex = hoveredFrame - 1;
-
-            if (valIndex >= 0 && valIndex < static_cast<int>(values.size()))
+ 
+            ImVec2 mouseScreenPos = ImGui::GetMousePos();
+ 
+            const std::string* closestParam = nullptr;
+            double closestValue = 0.0;
+            float closestDist = std::numeric_limits<float>::max();
+ 
+            for (const std::string& parameter : parameters)
+            {
+                const auto& values = TelemetryManager::GetValues(parameter);
+                if (valIndex < 0 || valIndex >= static_cast<int>(values.size()))
+                    continue;
+ 
+                double y = static_cast<double>(values[valIndex]);
+                
+                ImVec2 pixelPos = ImPlot::PlotToPixels(ImPlotPoint(static_cast<double>(hoveredFrame), y));
+                float dist = std::fabs(pixelPos.y - mouseScreenPos.y);
+ 
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestParam = &parameter;
+                    closestValue = y;
+                }
+            }
+ 
+            if (closestParam != nullptr)
             {
                 double ptX = static_cast<double>(hoveredFrame);
-                double ptY = static_cast<double>(values[valIndex]);
+                double ptY = closestValue;
+ 
                 ImPlotSpec spec;
                 spec.Marker = ImPlotMarker_Circle;
                 spec.MarkerSize = 4.0f;
-                spec.MarkerFillColor = ImVec4(0.2f, 0.2f, 1.0f, 1.0f);
+                spec.MarkerFillColor = GetParameterColor(*closestParam);
                 spec.MarkerLineColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
                 spec.LineWeight = 1.5f;
-
+ 
                 ImPlot::PlotScatter("##HoverHighlight", &ptX, &ptY, 1, spec);
-
+ 
                 ImGui::BeginTooltip();
-                ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", parameter.c_str());
+                ImGui::TextColored(GetParameterColor(*closestParam), "%s", closestParam->c_str());
                 ImGui::Separator();
                 ImGui::Text("Value: %.4f", ptY);
                 ImGui::Text("Frame: %d", hoveredFrame);
                 ImGui::EndTooltip();
             }
         }
+ 
         ImPlot::EndPlot();
     }
-
+ 
     ImPlot::PopStyleVar(3);
-
+ 
     m_viewStartFrame = static_cast<int>(plotMinX);
     m_viewEndFrame = static_cast<int>(plotMaxX);
-
+ 
     if (m_viewStartFrame < 0)
         m_viewStartFrame = 0;
-    
+ 
     if (m_viewEndFrame > TelemetryManager::GetMaxFrames())
         m_viewEndFrame = TelemetryManager::GetMaxFrames();
+}
+
+ImVec4 UITimeline::GetParameterColor(const std::string& name)
+{
+    uint32_t hash = 2166136261u;
+    for (unsigned char c : name)
+    {
+        hash ^= c;
+        hash *= 16777619u;
+    }
+    return parameterPalette[hash % parameterPaletteSize];
 }

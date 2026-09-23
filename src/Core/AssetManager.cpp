@@ -5,20 +5,16 @@
 #include "Render/Material.h"
 #include "Render/Model.h"
 #include "Render/Texture.h"
+#include "Core/SceneObject.h"
 
 void AssetManager::Init()
 {
-    //SHADERS
-    fs::path shadersCodeFolder = fs::path(FileSystem::GetAssetPath("User")) / "ShadersCode";
-    if (!fs::exists(shadersCodeFolder))
-        fs::create_directories(shadersCodeFolder);
-
-    fs::path defaultShaderPath = fs::path(FileSystem::GetAssetPath("User")) / "Shaders" / "DefaultShader.shader";
+    fs::path defaultShaderPath = fs::path(FileSystem::GetAssetPath("User", "Shaders")) / "DefaultShader.shader";
     if (!fs::exists(defaultShaderPath))
         CreateNewShader("DefaultShader");
 
     //MATERIALS
-    fs::path materialsFolder = fs::path(FileSystem::GetAssetPath("User")) / "Materials";
+    fs::path materialsFolder = fs::path(FileSystem::GetAssetPath("User", "Materials"));
     if (!fs::exists(materialsFolder))
         fs::create_directories(materialsFolder);
 
@@ -114,6 +110,36 @@ Texture* AssetManager::GetTexture(const std::string& filename)
     return texturesMap[filename];
 }
 
+bool AssetManager::DeleteTexture(const std::string& filename)
+{
+    if (texturesMap.find(filename) == texturesMap.end())
+    {
+        Console::LogError("texture not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    Texture* texture = texturesMap[filename];
+
+    for (auto& it : materialsMap)
+    {
+        Material* mat = it.second;
+        if (mat->GetColorMap() == texture)
+            mat->SetColorMap(nullptr);
+        if (mat->GetSpecularMap() == texture)
+            mat->SetSpecularMap(nullptr);
+    }
+
+    if (texturesMap.erase(filename) == 0)
+    {
+        Console::LogError("texture not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    delete texture;
+    return FileSystem::DeleteAsset(filename, ".png", "Textures") || FileSystem::DeleteAsset(filename, ".jpg", "Textures") || 
+            FileSystem::DeleteAsset(filename, ".jpeg", "Textures");
+}
+
 Model* AssetManager::GetModel(const std::string& filename)
 {
     if (modelsMap.find(filename) == modelsMap.end())
@@ -123,6 +149,28 @@ Model* AssetManager::GetModel(const std::string& filename)
     }
 
     return modelsMap[filename];
+}
+
+bool AssetManager::DeleteModel(const std::string& filename)
+{
+    if (modelsMap.find(filename) == modelsMap.end())
+    {
+        Console::LogError("model not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    Model* model = modelsMap[filename];
+    if (SceneManager::GetActiveScene())
+        SceneManager::GetActiveScene()->OnModelDeleted(model);
+
+    if (modelsMap.erase(filename) == 0)
+    {
+        Console::LogError("model not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    delete model;
+    return FileSystem::DeleteAsset(filename, ".fbx", "Models") || FileSystem::DeleteAsset(filename, ".obj", "Models");
 }
 
 void AssetManager::LoadModel(const std::string& filename)
@@ -302,6 +350,56 @@ Material* AssetManager::GetMaterial(const std::string& filename)
     return materialsMap[filename];
 }
 
+bool AssetManager::DeleteMaterial(const std::string& filename)
+{
+    if (filename == "DefaultMaterial")
+    {
+        Console::LogError("Can't delete default material", LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    if (materialsMap.find(filename) == materialsMap.end())
+    {
+        Console::LogError("material not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    Material* mat = materialsMap[filename];
+    if (SceneManager::GetActiveScene())
+        SceneManager::GetActiveScene()->OnMaterialDeleted(mat);
+
+    if (materialsMap.erase(filename) == 0)
+    {
+        Console::LogError("material not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    delete mat;
+    return FileSystem::DeleteAsset(filename, ".mat", "Materials");
+}
+
+bool AssetManager::RenameMaterial(const std::string& oldFilename, const std::string& newFilename)
+{
+    if (oldFilename == "DefaultMaterial" || newFilename == "DefaultMaterial")
+        return false;
+        
+    if (materialsMap.find(oldFilename) == materialsMap.end())
+    {
+        Console::LogError("material not found for rename: " + oldFilename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    if (!FileSystem::RenameAsset(oldFilename, newFilename, ".mat", "Materials"))
+        return false;
+
+    Material* mat = materialsMap[oldFilename];
+    materialsMap[newFilename] = std::move(mat);
+    materialsMap.erase(oldFilename);
+    mat->SetName(newFilename);
+
+    return true;
+}
+
 void AssetManager::CreateNewShader(const std::string filename)
 {
     fs::path dir = fs::path(FileSystem::GetAssetPath("User")) / "Shaders";
@@ -371,6 +469,57 @@ Shader* AssetManager::GetShader(const std::string& filename)
     return shadersMap[filename];
 }
 
+bool AssetManager::DeleteShader(const std::string& filename)
+{
+    if (shadersMap.find(filename) == shadersMap.end())
+    {
+        Console::LogError("shader not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    Shader* shader = shadersMap[filename];
+    Shader* defShader = shadersMap.find("DefaultShader") != shadersMap.end() ? shadersMap["DefaultShader"] : nullptr;
+
+    for (auto& it : materialsMap)
+    {
+        Material* mat = it.second;
+        if (mat->GetShader() == shader)
+            mat->SetShader(defShader);
+    }
+
+    if (shadersMap.erase(filename) == 0)
+    {
+        Console::LogError("shader not found for delete: " + filename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    delete shader;
+    return FileSystem::DeleteAsset(filename, ".shader", "Shaders");
+}
+
+bool AssetManager::RenameShader(const std::string& oldFilename, const std::string& newFilename)
+{
+    if (oldFilename == "DefaultShader" || newFilename == "DefaultShader")
+        return false;
+        
+    if (shadersMap.find(oldFilename) == shadersMap.end())
+    {
+        Console::LogError("shader not found for rename: " + oldFilename, LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+
+    if (!FileSystem::RenameAsset(oldFilename, newFilename, ".shader", "Shaders"))
+        return false;
+
+    Shader* shader = shadersMap[oldFilename];
+    shadersMap[newFilename] = std::move(shader);
+    shadersMap.erase(oldFilename);
+    shader->SetName(newFilename);
+
+    //Materials already have a pointer to Shader, so there's no need to update them
+    return true;
+}
+
 void AssetManager::SaveAll()
 {
     SaveAllMaterials();
@@ -394,4 +543,140 @@ void AssetManager::SaveAllMaterials()
         else
             Console::LogError("Error saving material at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
     }
+}
+
+bool AssetManager::CreateNewPreset(SceneObject* rootObj, const std::string& name)
+{
+    if (rootObj == nullptr)
+        return false;
+
+    std::string filename = Utils::GetFileIncrementalName(name, ".preset", "Presets");
+    fs::path finalPath = fs::path(FileSystem::GetAssetPath("User", "Presets")) / (filename + ".preset");
+    
+    json j;
+    j["name"] = filename;
+    
+    json objectsJson = json::array();
+    std::vector<SceneObject*> allObjects;
+
+    Scene* activeScene = SceneManager::GetActiveScene();
+    if (activeScene == nullptr)
+        return false;
+
+    activeScene->CollectHierarchy(rootObj, allObjects);
+
+    for (SceneObject* obj : allObjects)
+    {
+        json objJson = obj->ToJson();
+        if (obj == rootObj)
+            j["parent_id"] = 0;
+
+            objectsJson.push_back(objJson);
+    }
+
+    j["sceneObjects"] = objectsJson;
+
+    std::ofstream out(finalPath);
+    if (out.is_open()) {
+        out << j.dump(4);
+        out.close();
+        Console::LogInfo("Saved preset at " + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
+    } else {
+        Console::LogError("Error saving preset at 0" + finalPath.string(), LOG_CATEGORY::ASSETMANAGER);
+        return false;
+    }
+    return true;
+}
+
+SceneObject* AssetManager::InstantiatePreset(const std::string& name, SceneObject* targetMountPoint)
+{
+    Scene* activeScene = SceneManager::GetActiveScene();
+
+    if (activeScene == nullptr)
+        return nullptr;
+
+    fs::path presetsFolder = fs::path(FileSystem::GetAssetPath("User")) / "Presets";
+    fs::path targetPath = presetsFolder / name;
+
+    if (!targetPath.has_extension())
+        targetPath += ".preset";
+
+    if (!fs::exists(targetPath))
+    {
+        Console::LogError("Can't find " + targetPath.string(), LOG_CATEGORY::ASSETMANAGER);
+        return nullptr;
+    }
+
+    std::ifstream file(targetPath);
+    if (!file.is_open())
+    {
+        Console::LogError("Can't open file " + targetPath.string(), LOG_CATEGORY::ASSETMANAGER);
+        return nullptr;
+    }
+
+    json presetJson;
+    file >> presetJson;
+
+    //(old_id, new_id), remapping to avoid ID dupes
+    std::unordered_map<uint64_t, uint64_t> idMap;
+    std::vector<std::pair<SceneObject*, json>> loadedObjects;
+
+    for (json& j : presetJson["sceneObjects"])
+    {
+        uint64_t oldId = j["id"];
+        SceneObject* newObj = new SceneObject();
+        idMap[oldId] = newObj->GetID();
+        loadedObjects.push_back({newObj, j});
+    }
+
+    SceneObject* presetRoot = nullptr;
+
+    std::vector<SceneObject*> objectsToAdd;
+
+    for (std::pair<SceneObject*, json> pair : loadedObjects)
+    {
+        SceneObject* obj = pair.first;
+        json j = pair.second;
+
+        uint64_t oldId = j["id"];
+        j["id"] = idMap[oldId];
+
+        uint64_t oldParentId = j["parent_id"];
+
+        if (oldParentId == 0) //root
+        {
+            presetRoot = obj;
+
+            if (targetMountPoint)
+                j["parent_id"] = targetMountPoint->GetID();
+        } else {
+            if (idMap.find(oldParentId) != idMap.end())
+            {
+                j["parent_id"] = idMap[oldParentId];
+            }
+        }
+
+        obj->FromJson(j);
+        activeScene->AddObject(obj);
+    }
+
+    for (auto& pair : loadedObjects)
+    {
+        SceneObject* obj = pair.first;
+        uint64_t parentId = obj->GetParentID();
+        
+        if (parentId != 0)
+        {
+            SceneObject* parentObj = activeScene->GetSceneObjectByID(parentId);
+            if (parentObj)
+                obj->transform.SetParent(&parentObj->transform, false); 
+            else
+                Console::LogError("Parent with id " + std::to_string(parentId) + " not found for " + obj->name, LOG_CATEGORY::ASSETMANAGER);
+        }
+    }
+
+    if (presetRoot)
+        presetRoot->transform.GetModelMatrix();
+
+    return presetRoot;
 }

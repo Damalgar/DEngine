@@ -1,18 +1,14 @@
 #include "Core/SceneObject.h"
 #include "Core/AssetManager.h"
 #include "Core/TagManager.h"
-#include <random>
+#include "Utils/Utils.h"
 
 SceneObject::SceneObject() : SceneObject("SceneObject") {}
 
 SceneObject::SceneObject(const std::string& name)
     : name(name), m_parentID(0), transform(this), m_tag("Default")
 {
-    std::random_device rd;
-    std::mt19937_64 eng(rd());
-    std::uniform_int_distribution<uint64_t> distr;
-
-    m_ID = distr(eng);
+    m_ID = Utils::GetRandomID();
 }
 
 void SceneObject::Update()

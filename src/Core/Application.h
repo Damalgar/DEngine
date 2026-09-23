@@ -31,6 +31,8 @@ class Application {
     inline static Application* Instance = nullptr;
 
     Application();
+    ~Application();
+    
     int Init(int argc, char* argv0);
     void MainLoop();
 

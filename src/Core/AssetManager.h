@@ -11,6 +11,7 @@ class Material;
 class Shader;
 class Texture;
 class Model;
+class SceneObject;
 
 namespace fs = std::filesystem;
 
@@ -19,11 +20,13 @@ class AssetManager {
 
     static void Init();
 
+    static void LoadTexture(const std::string& filename);
     static Texture* GetTexture(const std::string& filename);
-    static Model* GetModel(const std::string& filename);
+    static bool DeleteTexture(const std::string& filename);
 
     static void LoadModel(const std::string& filename);
-    static void LoadTexture(const std::string& filename);
+    static Model* GetModel(const std::string& filename);
+    static bool DeleteModel(const std::string& filename);
 
     static void LoadAllShaders();
     static void LoadAllMaterials();
@@ -39,10 +42,17 @@ class AssetManager {
     static void CreateNewMaterial(const std::string filename = "Material");
     static Material* GetMaterial(const std::string& filename);
     static void LoadMaterial(const std::string& filename);
+    static bool DeleteMaterial(const std::string& filename);
+    static bool RenameMaterial(const std::string& oldFilename, const std::string& newFilename);
 
     static void CreateNewShader(const std::string filename = "Shader");
     static Shader* GetShader(const std::string& filename);
     static void LoadShader(const std::string& filename);
+    static bool DeleteShader(const std::string& filename);
+    static bool RenameShader(const std::string& oldFilename, const std::string& newFilename);
+
+    static bool CreateNewPreset(SceneObject* rootObj, const std::string& name);
+    static SceneObject* InstantiatePreset(const std::string& name, SceneObject* targetMountPoint = nullptr);
 
     private:
     inline static std::unordered_map<std::string, Texture*> texturesMap;

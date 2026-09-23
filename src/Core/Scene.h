@@ -27,6 +27,8 @@ class Scene : public ISerializable {
     void RemoveObject(SceneObject* object);
     void RemoveObject(int index);
     void CollectHierarchy(SceneObject* root, std::vector<SceneObject*>& hierarchy);
+    SceneObject* GetSceneObjectByID(uint64_t ID);
+    SceneObject* InstantiatePreset(const std::string& name, SceneObject* targetMountPoint = nullptr);
     
     json ToJson() const override;
     void FromJson(const json& j) override;
@@ -41,6 +43,11 @@ class Scene : public ISerializable {
 
     const mat4& GetViewMatrix() const { return m_currentViewMatrix; }
     const mat4& GetProjectionMatrix() const { return m_currentProjectionMatrix; }
+
+    bool SavePreset(SceneObject* obj, const std::string& name);
+
+    void OnModelDeleted(Model* model);
+    void OnMaterialDeleted(Material* mat);
 
     private:
     std::vector<SceneObject*> m_sceneObjects;

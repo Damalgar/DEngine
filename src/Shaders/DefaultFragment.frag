@@ -19,8 +19,15 @@ uniform Material material;
 uniform sampler2D colorMap;
 uniform sampler2D specularMap;
 
+uniform bool usePlainColor;
+
 void main()
 {
+    if (usePlainColor)
+    {
+        FragColor = tintColor;
+        return;
+    }
     //===LIGHTNING===
 
     //variables

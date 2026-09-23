@@ -43,7 +43,7 @@ void PopupManager::DrawConfirmPopup()
         TextUnformatted(m_confirmPopupInfos.message);
         Separator();
 
-        if (DrawButtonColored("Confirm", BUTTON_COLORS::POSITIVE))
+        if (DrawButtonColored("Confirm", BUTTON_COLORS::GREEN))
         {
             if (m_confirmPopupInfos.onConfirm) m_confirmPopupInfos.onConfirm();
             ImGui::CloseCurrentPopup();
@@ -51,7 +51,7 @@ void PopupManager::DrawConfirmPopup()
 
         ImGui::SameLine();
 
-        if (DrawButtonColored("Cancel", BUTTON_COLORS::NEGATIVE))
+        if (DrawButtonColored("Cancel", BUTTON_COLORS::GREEN))
         {
             if (m_confirmPopupInfos.onCancel) m_confirmPopupInfos.onCancel();
             ImGui::CloseCurrentPopup();
@@ -107,7 +107,7 @@ void PopupManager::DrawAddModelPopup()
             ImGui::EndChild();
         }
 
-        if (DrawButtonColored("Import", BUTTON_COLORS::POSITIVE))
+        if (DrawButtonColored("Import", BUTTON_COLORS::GREEN))
         {
             if (m_addModelPopupInfos.onMountSelected) m_addModelPopupInfos.onMountSelected(m_addModelPopupInfos.selectedMountPoint);
             ImGui::CloseCurrentPopup();
@@ -115,7 +115,7 @@ void PopupManager::DrawAddModelPopup()
 
         ImGui::SameLine();
 
-        if (DrawButtonColored("Cancel", BUTTON_COLORS::NEGATIVE))
+        if (DrawButtonColored("Cancel", BUTTON_COLORS::RED))
             ImGui::CloseCurrentPopup();
 
         ImGui::EndPopup();

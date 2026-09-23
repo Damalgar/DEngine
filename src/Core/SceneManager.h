@@ -10,6 +10,7 @@ class SceneManager {
     static Scene* GetActiveScene() { return s_activeScene; }
     static void SaveCurrentScene();
     static void LoadScene(const std::string& filename, bool saveCurrent = false);
+    static void SaveCurrentSceneAutosave();
 
     private:
     inline static Scene* s_activeScene = nullptr;

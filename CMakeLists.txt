@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(DEngine)
 
+option(ENABLE_ASAN "AddressSanitizerSwitch" ON)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -119,6 +121,7 @@ set(SOURCES
     src/UI/Panels/UIConsole.cpp
     src/UI/Panels/UIInspector.cpp
     src/UI/Panels/UITimeline.cpp
+    src/UI/Panels/UITags.cpp
 
     #===ICONS===
     src/Icons/IconsLoader.cpp
@@ -150,4 +153,16 @@ elseif(UNIX AND NOT APPLE)
     ${SOURCES}
     )
     target_link_libraries(DEngine PRIVATE glfw OpenGL::GL dl pthread assimp)
+endif()
+
+if(ENABLE_ASAN)
+    if(MSVC)
+        target_compile_options(DEngine PRIVATE /fsanitize=address /Zi)
+    else()
+        target_compile_options(DEngine PRIVATE -fsanitize=address -g -fno-omit-frame-pointer)
+        target_link_options(DEngine PRIVATE -fsanitize=address)
+    endif()
+    message(STATUS "AddressSanitizer active")
+else()
+    message(STATUS "AddressSanitizer not active")
 endif()
